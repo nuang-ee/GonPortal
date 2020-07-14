@@ -1,0 +1,20 @@
+{
+  "name": "new_version",
+  "version": "1.0.0",
+  "description": "A new version of KAIST GoN Recruiting page.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "sudo node app.js"
+  },
+  "author": "nuang-ee",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "mongoose": "^5.9.1",
+    "nodemailer": "^6.4.10"
+  },
+  "devDependencies": {}
+}
