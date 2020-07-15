@@ -45,13 +45,11 @@ AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
 }));
 
 /* UPDATE ACCOUNT INFORMATION */
-AccountControlRouter.put('/update/:id', (req, res) => {
-    NewbieAccount.findByIdAndUpdate(req.params.id, req.body, {new: true},
-        (err, Account) => {
-            if (err) return res.status(500).send("Failed to Update Account");
-            res.status(200).send("Succeed to Update Account");
-        });
-});
+AccountControlRouter.put('/update/:id', asyncHandler(async (req, res) => {
+    // TODO: add validation logic
+    await NewbieAccount.findByIdAndUpdate(req.params.id, req.body, {new: true});
+    res.status(200).send("Succeed to Update Account");
+}));
 
 /* LOGIN */
 AccountControlRouter.post('/auth/login', (req, res) => {
