@@ -1,7 +1,8 @@
 import * as express from "express";
 import asyncHandler from "express-async-handler";
-import { NewbieAccount, secret } from "../utils/db";
-import * as crypto from "crypto";
+import { NewbieAccount } from "../utils/db";
+import { sendAuthMail, verifyAuthMail } from "../utils/mailAuth";
+import { Auth } from "../Core/Auth";
 import * as Mongoose from "mongoose";
 import { INewbieAccount } from "../Documents/AccountDocument";
 
@@ -9,39 +10,61 @@ export const AccountControlRouter = express.Router();
 
 /* NEW ACCOUNT */
 AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
-    if ( !req || !req.body || !req.body.uid || !req.body.password || !req.body.sNum ||
-        !req.body.name || !req.body.email || !req.body.phoneNum ) {
+    const { uid, password, sNum, name, email, phoneNum } = req.body;
+    if ( !uid || !password || !sNum || !name || !email || !phoneNum ) {
         return res.status(400).send("Invalid Request");
     }
 
     // FIXME : edit response to show some toast popup or something, instead of raw text.
-    if (await NewbieAccount.countDocuments({ uid : req.body.uid }) > 0)
+    if (await NewbieAccount.countDocuments({ uid: uid }) > 0) {
         return res.status(400).send("Username Already Exists");
+    }
 
-    if (await NewbieAccount.countDocuments({ sNum : req.body.sNum }) > 0)
+    if (await NewbieAccount.countDocuments({ sNum: sNum }) > 0) {
         return res.status(400).send("Already Registered Student");
+    }
 
-    if (await NewbieAccount.countDocuments({ email : req.body.email }) > 0)
+    if (await NewbieAccount.countDocuments({ email: email }) > 0) {
         return res.status(400).send("Already Registered email address");
+    }
 
-    const pwHash = crypto.createHmac('sha256', secret)
-        .update(req.body.password)
-        .digest('base64');
+    const pwHash = await Auth.hash(req.body.password);
 
     await NewbieAccount.create({
-        uid: req.body.uid,
+        uid: uid,
         password: pwHash,
-        sNum: req.body.sNum,
-        name: req.body.name,
-        email: req.body.email,
+        sNum: sNum,
+        name: name,
+        email: email,
         emailAuthed: false,
-        phoneNum: req.body.phoneNum,
+        phoneNum: phoneNum,
         resume: "",
         solved: 0,
         created: Date.now()
     })
+
+    const mailAuthRes = await sendAuthMail(uid, email);
+    console.log(mailAuthRes);
     
     return res.status(200).send("<p>Successfully added your account! Check your email to authenticate your account.</p>");
+}));
+
+/* MAIL AUTHENTICATION */
+AccountControlRouter.get('/mailAuth/:iv/:authCode/:authTag', asyncHandler(async (req, res) => {
+    const { iv, authCode, authTag } = req.params;
+    const authData = verifyAuthMail(iv, authCode, authTag);
+
+    if (authData === undefined) {
+        return res.status(400).send("Mail authentication failed. Please check the verification link or resend verification mail");
+    }
+
+    // TODO: prevent multiple authentications
+    const updateResult = await NewbieAccount.findOneAndUpdate({uid: authData.uid, email: authData.email}, {emailAuthed: true});
+    if (updateResult === null) {
+        return res.status(400).send("Mail authentication failed. Please check the verification link or resend verification mail");
+    }
+
+    return res.status(200).send("Mail authenticated.");
 }));
 
 /* UPDATE ACCOUNT INFORMATION */
@@ -55,5 +78,4 @@ AccountControlRouter.put('/update/:id', asyncHandler(async (req, res) => {
 AccountControlRouter.post('/auth/login', (req, res) => {
 
 });
-
 

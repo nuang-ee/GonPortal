@@ -1,4 +1,3 @@
-import * as dbConfig from "../config";
 import mongoose from "mongoose";
 import { INewbieAccount, NewbieAccountSchema } from "../Documents/AccountDocument";
 
@@ -18,7 +17,5 @@ mongoose.connect(mongodbURI, mongodbOption)
         console.log('Error on mongoDB connecting: ' + err.stack);
         process.exit(1);
 });
-
-export const secret = dbConfig.KEY.secret;
 
 export const NewbieAccount = mongoose.model<INewbieAccount>("NewbieAccount", NewbieAccountSchema);
