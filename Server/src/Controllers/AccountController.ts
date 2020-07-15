@@ -1,8 +1,6 @@
 import * as express from "express";
-// mongoose model of account schema.
+import asyncHandler from "express-async-handler";
 import { NewbieAccount, secret } from "../utils/db";
-
-// Dependencies.
 import * as crypto from "crypto";
 import * as Mongoose from "mongoose";
 import { INewbieAccount } from "../Documents/AccountDocument";
@@ -10,31 +8,27 @@ import { INewbieAccount } from "../Documents/AccountDocument";
 export const AccountControlRouter = express.Router();
 
 /* NEW ACCOUNT */
-AccountControlRouter.post('/register', (req, res) => {
+AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
     if ( !req || !req.body || !req.body.uid || !req.body.password || !req.body.sNum ||
         !req.body.name || !req.body.email || !req.body.phoneNum ) {
-        res.status(400).send("Invalid Request");
+        return res.status(400).send("Invalid Request");
     }
 
     // FIXME : edit response to show some toast popup or something, instead of raw text.
-    NewbieAccount.countDocuments({ uid : req.body.uid }, (err: any, count) => {
-        if (count > 0) res.status(400).send("Username Already Exists");
-    })
+    if (await NewbieAccount.countDocuments({ uid : req.body.uid }) > 0)
+        return res.status(400).send("Username Already Exists");
 
-    NewbieAccount.countDocuments({ sNum : req.body.sNum }, (err: any, count) => {
-        if (count > 0) res.status(400).send("Already Registered Student");
-    })
+    if (await NewbieAccount.countDocuments({ sNum : req.body.sNum }) > 0)
+        return res.status(400).send("Already Registered Student");
 
-    NewbieAccount.countDocuments({ email : req.body.email }, (err: any, count) => {
-        if (count > 0) res.status(400).send("Already Registered email address");
-    })
+    if (await NewbieAccount.countDocuments({ email : req.body.email }) > 0)
+        return res.status(400).send("Already Registered email address");
 
     const pwHash = crypto.createHmac('sha256', secret)
         .update(req.body.password)
         .digest('base64');
 
-    NewbieAccount.create(
-    {
+    await NewbieAccount.create({
         uid: req.body.uid,
         password: pwHash,
         sNum: req.body.sNum,
@@ -45,11 +39,10 @@ AccountControlRouter.post('/register', (req, res) => {
         resume: "",
         solved: 0,
         created: Date.now()
-    }, (err: any, Account: any) => {
-        if (err) return res.status(500).send("Failed to Add Account");
-        res.status(200).send("<p>Successfully added your account! Check your email to authenticate your account.</p>");
-    });
-});
+    })
+    
+    return res.status(200).send("<p>Successfully added your account! Check your email to authenticate your account.</p>");
+}));
 
 /* UPDATE ACCOUNT INFORMATION */
 AccountControlRouter.put('/update/:id', (req, res) => {

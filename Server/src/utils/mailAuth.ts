@@ -1,6 +1,6 @@
-const nodemailer = require('nodemailer');
+import * as nodemailer from "nodemailer";
 
-if (!(process.env.NODEMAILER_USERNAME && process.env.NODEMAILER_PASSWORD)) {
+if (!process.env.NODEMAILER_USERNAME || !process.env.NODEMAILER_PASSWORD) {
     console.log('env not set: nodemailer');
     process.exit(1);
 }
@@ -16,19 +16,13 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-exports.sendAuthMail = async function (userEmail: string) {
+export async function sendAuthMail(userEmail: string): Promise<any> {
     const generatedKey = Math.floor(100000 + Math.random() * 900000).toString();
-    await transporter.sendMail({
+    return transporter.sendMail({
         from: `"KAIST GoN" < ${process.env.NODEMAILER_USERNAME}>`,
         to: userEmail,
         subject: 'GoN Newbie Recruiting Page Authentication',
         text: generatedKey,
         html: `<b>${generatedKey}<b>`,
-    }, (err: Error, info: any) => {
-        console.log(info.envelope);
-        console.log(info.messageID);
-        return false;
     });
-
-    return true;
 }
