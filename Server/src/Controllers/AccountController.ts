@@ -44,7 +44,6 @@ AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
     })
 
     const mailAuthRes = await sendAuthMail(uid, email);
-    console.log(mailAuthRes);
     
     return res.status(200).send("<p>Successfully added your account! Check your email to authenticate your account.</p>");
 }));
