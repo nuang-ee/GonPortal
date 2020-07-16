@@ -32,7 +32,7 @@ app.use(session({
     saveUninitialized: true,
     cookie: {
         maxAge: 1000 * 60 * 60,
-    }
+    },
 }));
 
 app.use(bodyParser.json());

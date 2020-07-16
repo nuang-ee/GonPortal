@@ -71,10 +71,13 @@ AccountControlRouter.get('/auth/mail/resend', asyncHandler(async (req, res) => {
 }));
 
 /* MAIL AUTHENTICATION */
-AccountControlRouter.get('/auth/mail/:iv/:authCode/:authTag', asyncHandler(async (req, res) => {
-    const { iv, authCode, authTag } = req.params;
-    const authData = verifyAuthMail(iv, authCode, authTag);
+AccountControlRouter.get('/auth/mail/verify', asyncHandler(async (req, res) => {
+    const { iv, authCode, authTag } = req.query;
 
+    if (typeof iv !== 'string' || typeof authCode !== 'string' || typeof authTag !== 'string') {
+        return res.status(400).send("Mail authentication failed. Please check the verification link or resend verification mail.");
+    }
+    const authData = verifyAuthMail(iv as string, authCode as string, authTag as string);
     if (authData === undefined) {
         return res.status(400).send("Mail authentication failed. Please check the verification link or resend verification mail.");
     }
