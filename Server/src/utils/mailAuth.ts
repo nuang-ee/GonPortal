@@ -24,15 +24,13 @@ const key = crypto.createHash('sha256').update(secret).digest();
 
 export type AuthData = {
     _id: string,
-    uid: string,
     email: string,
     validUntil: Number,
 };
 
-export function sendAuthMail(_id: string, uid: string, email: string, callback: (err: Error | null, info: any) => void) {
+export function sendAuthMail(_id: string, email: string, callback: (err: Error | null, info: any) => void) {
     const authData = {
         _id: _id,
-        uid: uid,
         email: email,
         validUntil: Date.now() + validDuration,
     } as AuthData;

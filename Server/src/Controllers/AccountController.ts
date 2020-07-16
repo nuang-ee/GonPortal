@@ -43,7 +43,7 @@ AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
         created: Date.now()
     })
 
-    sendAuthMail(account._id, uid, email, (err, info) => { if (err) console.log(err, info) });
+    sendAuthMail(account._id, email, (err, info) => { if (err) console.log(err, info) });
     
     return res.status(200).send("<p>Successfully added your account! Check your email to authenticate your account.</p>");
 }));
@@ -54,14 +54,19 @@ AccountControlRouter.get('/mailAuth/:iv/:authCode/:authTag', asyncHandler(async 
     const authData = verifyAuthMail(iv, authCode, authTag);
 
     if (authData === undefined) {
-        return res.status(400).send("Mail authentication failed. Please check the verification link or resend verification mail");
+        return res.status(400).send("Mail authentication failed. Please check the verification link or resend verification mail.");
     }
 
-    // TODO: prevent multiple authentications
-    const updateResult = await NewbieAccount.findOneAndUpdate({_id: authData._id, uid: authData.uid, email: authData.email}, {emailAuthed: true});
-    if (updateResult === null) {
-        return res.status(400).send("Mail authentication failed. Please check the verification link or resend verification mail");
+    const account = await NewbieAccount.findById(authData._id);
+    if (account === null) {
+        return res.status(400).send("Mail authentication failed. Please check the verification link or resend verification mail.");
+    } else if (account.email !== authData.email) {
+        return res.status(400).send("Mail authentication failed. Your email has been changed, please resend verification mail.");
+    } else if (account.emailAuthed) {
+        return res.status(400).send("Mail already authenticated.");
     }
+    account.emailAuthed = true;
+    await account.save();
 
     return res.status(200).send("Mail authenticated.");
 }));
