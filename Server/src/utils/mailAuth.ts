@@ -41,7 +41,7 @@ export function sendAuthMail(_id: string, email: string, callback: (err: Error |
     const authTag = authCipher.getAuthTag();
 
     // TODO: compose link from config or env
-    const verifyLink = `http://localhost/users/mailAuth/${b64u.encode(iv)}/${b64u.encode(authCode)}/${b64u.encode(authTag)}`;
+    const verifyLink = `http://localhost/users/auth/mail/${b64u.encode(iv)}/${b64u.encode(authCode)}/${b64u.encode(authTag)}`;
     transporter.sendMail({
         from: `"KAIST GoN" <noreply@goatskin.kr>`,
         to: email,

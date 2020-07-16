@@ -8,6 +8,8 @@ import { INewbieAccount } from "../Documents/AccountDocument";
 
 export const AccountControlRouter = express.Router();
 
+// FIXME: replace all response send, with proper vue.js actions.
+
 /* NEW ACCOUNT */
 AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
     const { uid, password, sNum, name, email, phoneNum } = req.body;
@@ -48,8 +50,28 @@ AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
     return res.status(200).send("<p>Successfully added your account! Check your email to authenticate your account.</p>");
 }));
 
+AccountControlRouter.get('/auth/mail/resend', asyncHandler(async (req, res) => {
+    if (!req.session) {
+        return res.status(400).send("You haven't logged in");
+    }
+
+    const _id = req.session._id;
+    if (!_id) return res.status(400).send("Invalid Session");
+
+    const authed = req.session.Authed;
+    if (authed) return res.status(200).send("Your Account has been already authorized!");
+
+    const user = await NewbieAccount.findOne({ _id: _id });
+    if (!user) return res.status(400).send("Invalid Session");
+    if (user.emailAuthed) return res.status(200).send("Your Account has been already authorized!");
+
+    sendAuthMail(_id, user.email, (err, info) => {if (err) console.log(err, info)});
+
+    return res.status(200).send("<p>Sent Authentication Email! Check your email to authenticate your account.</p>");
+}));
+
 /* MAIL AUTHENTICATION */
-AccountControlRouter.get('/mailAuth/:iv/:authCode/:authTag', asyncHandler(async (req, res) => {
+AccountControlRouter.get('/auth/mail/:iv/:authCode/:authTag', asyncHandler(async (req, res) => {
     const { iv, authCode, authTag } = req.params;
     const authData = verifyAuthMail(iv, authCode, authTag);
 
@@ -66,6 +88,7 @@ AccountControlRouter.get('/mailAuth/:iv/:authCode/:authTag', asyncHandler(async 
         return res.status(400).send("Mail already authenticated.");
     }
     account.emailAuthed = true;
+
     await account.save();
 
     return res.status(200).send("Mail authenticated.");
@@ -83,9 +106,7 @@ AccountControlRouter.post('/auth/login', asyncHandler(async (req, res) => {
     const { uid, password } = req.body;
 
     if (req.session?._id) {
-        res.writeHead(200, { "Content-Type": "text/html;characterset=utf8" });
-        res.write('<h1>already Logged In</h1>');
-        return res.send();
+        return res.send('<h1>already Logged In</h1>');
     } else {
         const user = await NewbieAccount.findOne({uid: uid});
         if (!user?.password || !(await Auth.isValid(password, user.password)))

@@ -5,7 +5,7 @@ export interface INewbieAccount extends mongoose.Document {
     password: string;
     sNum: string;
     name: string;
-    email: String;
+    email: string;
     emailAuthed: boolean;   // true if email is authorized via mailauth.
     phoneNum: string;
     resume: string;
