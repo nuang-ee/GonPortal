@@ -1,5 +1,6 @@
 export const KEY = {
-    secret: "SOME_RANDOM_SECRET_KEY",
+    db_secret: "SOME_RANDOM_SECRET_KEY",
+    sess_secret: "SOME_RANDOM_SESSION_KEY",
 }
 
 export const MAIL_MAC = {
