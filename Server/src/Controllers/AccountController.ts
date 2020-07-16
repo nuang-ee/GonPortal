@@ -17,6 +17,14 @@ AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
         return res.status(400).send("Invalid Request");
     }
 
+    const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!emailRegex.test(email)) return res.status(400).send("Invalid Email Form");
+
+    const whiteList: string[] = ["kaist.ac.kr"];
+    const emailDomain: string = email.substring(email.indexOf("@") + 1);
+    console.log(emailDomain);
+    if (!whiteList.includes(emailDomain)) return res.status(400).send("Sorry, we only allow KAIST students.");
+
     // FIXME : edit response to show some toast popup or something, instead of raw text.
     if (await NewbieAccount.countDocuments({ uid: uid }) > 0) {
         return res.status(400).send("Username Already Exists");
