@@ -12,18 +12,27 @@ export const AccountControlRouter = express.Router();
 
 /* NEW ACCOUNT */
 AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
-    const { uid, password, sNum, name, email, phoneNum } = req.body;
+    const { uid, password, sNum, name, phoneNum } = req.body;
+    let email = req.body.email;
     if ( !uid || !password || !sNum || !name || !email || !phoneNum ) {
         return res.status(400).send("Invalid Request");
     }
 
     const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    if (!emailRegex.test(email)) return res.status(400).send("Invalid Email Form");
+    if (!emailRegex.test(email)) {
+        return res.status(400).send("Invalid Email Form");
+    }
+
+    /* Only email domain is case insensitive per RFC 5321.
+     * However many email service providers (including mail.kaist.ac.kr) also consider
+     * user name as case insensitive - we follow this rule. */
+    email = email.toLowerCase();
 
     const whiteList: string[] = ["kaist.ac.kr"];
-    const emailDomain: string = email.substring(email.indexOf("@") + 1);
-    console.log(emailDomain);
-    if (!whiteList.includes(emailDomain)) return res.status(400).send("Sorry, we only allow KAIST students.");
+    const emailDomain = email.split("@")[1];
+    if (!whiteList.includes(emailDomain)) {
+        return res.status(400).send("Sorry, we only allow KAIST students.");
+    }
 
     // FIXME : edit response to show some toast popup or something, instead of raw text.
     if (await NewbieAccount.countDocuments({ uid: uid }) > 0) {
