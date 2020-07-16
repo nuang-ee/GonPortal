@@ -43,7 +43,7 @@ AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
         created: Date.now()
     })
 
-    const mailAuthRes = await sendAuthMail(uid, email);
+    sendAuthMail(uid, email, (err, info) => { if (err) console.log(err, info) });
     
     return res.status(200).send("<p>Successfully added your account! Check your email to authenticate your account.</p>");
 }));

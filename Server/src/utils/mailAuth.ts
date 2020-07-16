@@ -28,7 +28,7 @@ export type AuthData = {
     validUntil: Number,
 };
 
-export async function sendAuthMail(uid: string, email: string): Promise<any> {
+export function sendAuthMail(uid: string, email: string, callback: (err: Error | null, info: any) => void) {
     const authData = {
         uid: uid,
         email: email,
@@ -42,13 +42,13 @@ export async function sendAuthMail(uid: string, email: string): Promise<any> {
 
     // TODO: compose link from config or env
     const verifyLink = `http://localhost/users/mailAuth/${b64u.encode(iv)}/${b64u.encode(authCode)}/${b64u.encode(authTag)}`;
-    return transporter.sendMail({
+    transporter.sendMail({
         from: `"KAIST GoN" <noreply@goatskin.kr>`,
         to: email,
         subject: 'GoN Newbie Recruiting Page Authentication',
         text: `Verification Link: ${verifyLink}`,
         html: `<p>Verification Link: <a href="${verifyLink}">${verifyLink}</a></p>`,
-    });
+    }, callback);
 }
 
 export function verifyAuthMail(iv: string, authCode: string, authTag: string): AuthData | undefined {
