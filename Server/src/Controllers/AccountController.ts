@@ -30,7 +30,7 @@ AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
 
     const pwHash = await Auth.hash(req.body.password);
 
-    await NewbieAccount.create({
+    const account = await NewbieAccount.create({
         uid: uid,
         password: pwHash,
         sNum: sNum,
@@ -43,7 +43,7 @@ AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
         created: Date.now()
     })
 
-    sendAuthMail(uid, email, (err, info) => { if (err) console.log(err, info) });
+    sendAuthMail(account._id, uid, email, (err, info) => { if (err) console.log(err, info) });
     
     return res.status(200).send("<p>Successfully added your account! Check your email to authenticate your account.</p>");
 }));
@@ -58,7 +58,7 @@ AccountControlRouter.get('/mailAuth/:iv/:authCode/:authTag', asyncHandler(async 
     }
 
     // TODO: prevent multiple authentications
-    const updateResult = await NewbieAccount.findOneAndUpdate({uid: authData.uid, email: authData.email}, {emailAuthed: true});
+    const updateResult = await NewbieAccount.findOneAndUpdate({_id: authData._id, uid: authData.uid, email: authData.email}, {emailAuthed: true});
     if (updateResult === null) {
         return res.status(400).send("Mail authentication failed. Please check the verification link or resend verification mail");
     }

@@ -1,9 +1,9 @@
 import * as nodemailer from "nodemailer";
 import * as crypto from "crypto";
 import b64u from "base64url";
-import { MAIL_MAC } from "../config";
+import { MAIL_CONFIG } from "../config";
 
-if (!process.env.NODEMAILER_USERNAME || !process.env.NODEMAILER_PASSWORD) {
+if (!MAIL_CONFIG.NODEMAILER_USERNAME || !MAIL_CONFIG.NODEMAILER_PASSWORD) {
     console.log('env not set: nodemailer');
     process.exit(1);
 }
@@ -14,22 +14,24 @@ const transporter = nodemailer.createTransport({
     port: 587,
     secure: true,
     auth: {
-        user: process.env.NODEMAILER_USERNAME,
-        pass: process.env.NODEMAILER_PASSWORD,
+        user: MAIL_CONFIG.NODEMAILER_USERNAME,
+        pass: MAIL_CONFIG.NODEMAILER_PASSWORD,
     },
 });
 
-const { secret, validDuration, ivLength, authTagLength } = MAIL_MAC;
+const { secret, validDuration, ivLength, authTagLength } = MAIL_CONFIG;
 const key = crypto.createHash('sha256').update(secret).digest();
 
 export type AuthData = {
+    _id: string,
     uid: string,
     email: string,
     validUntil: Number,
 };
 
-export function sendAuthMail(uid: string, email: string, callback: (err: Error | null, info: any) => void) {
+export function sendAuthMail(_id: string, uid: string, email: string, callback: (err: Error | null, info: any) => void) {
     const authData = {
+        _id: _id,
         uid: uid,
         email: email,
         validUntil: Date.now() + validDuration,
