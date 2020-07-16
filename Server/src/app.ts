@@ -5,6 +5,8 @@ dotenv.config();
 import * as express from "express";
 import { AccountControlRouter } from "./Controllers/AccountController";
 import * as bodyParser from "body-parser";
+import session from "express-session";
+import { KEY } from "./config"
 
 class App {
     public app: express.Application;
@@ -23,6 +25,15 @@ const port = Number(process.env.PORT) || 80;
 
 // Let's Run SErver!!
 const app: express.Application = new App().app;
+
+app.use(session({
+    secret: KEY.sess_secret,
+    resave: false, // save session only when modified.
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 1000 * 60 * 60,
+    }
+}));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));

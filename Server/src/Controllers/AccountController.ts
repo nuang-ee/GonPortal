@@ -75,7 +75,27 @@ AccountControlRouter.put('/update/:id', asyncHandler(async (req, res) => {
 }));
 
 /* LOGIN */
-AccountControlRouter.post('/auth/login', (req, res) => {
+AccountControlRouter.post('/auth/login', asyncHandler(async (req, res) => {
+    const { uid, password } = req.body;
 
-});
+    if (req.session?._id) {
+        res.writeHead(200, { "Content-Type": "text/html;characterset=utf8" });
+        res.write('<h1>already Logged In</h1>');
+        return res.send();
+    } else {
+        const user = await NewbieAccount.findOne({uid: uid});
+        if (!user?.password || !(await Auth.isValid(password, user.password)))
+            return res.send("invalid username or password");
+        
+        if (!req.session) return res.status(400).send("invalid request");
+
+        req.session._id = user._id;
+        req.session.Authed = user.emailAuthed;
+        req.session.LoggedIn = true;
+
+        // req.session.save is done implicitly, on res.send
+        // FIXME : redirect to main page.
+        return res.send("you have logged in");
+    }
+}));
 
