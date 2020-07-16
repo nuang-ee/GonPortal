@@ -12,9 +12,26 @@ export const AccountControlRouter = express.Router();
 
 /* NEW ACCOUNT */
 AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
-    const { uid, password, sNum, name, email, phoneNum } = req.body;
+    const { uid, password, sNum, name, phoneNum } = req.body;
+    let email = req.body.email;
     if ( !uid || !password || !sNum || !name || !email || !phoneNum ) {
         return res.status(400).send("Invalid Request");
+    }
+
+    const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).send("Invalid Email Form");
+    }
+
+    /* Only email domain is case insensitive per RFC 5321.
+     * However many email service providers (including mail.kaist.ac.kr) also consider
+     * user name as case insensitive - we follow this rule. */
+    email = email.toLowerCase();
+
+    const whiteList: string[] = ["kaist.ac.kr"];
+    const emailDomain = email.split("@")[1];
+    if (!whiteList.includes(emailDomain)) {
+        return res.status(400).send("Sorry, we only allow KAIST students.");
     }
 
     // FIXME : edit response to show some toast popup or something, instead of raw text.
@@ -127,3 +144,20 @@ AccountControlRouter.post('/auth/login', asyncHandler(async (req, res) => {
     }
 }));
 
+/* LOGOUT */
+AccountControlRouter.get('/auth/logout', asyncHandler(async (req, res) => {
+    if (!req.session) return res.status(400).send("You haven't logged in");
+
+    const _id = req.session._id;
+    if (!_id) return res.status(400).send("Invalid Session");
+
+    req.session.destroy((err) => {
+        if (err) {
+            console.log("error on destroying session");
+            return res.status(500).send("Error on Logout");
+        }
+        // if needed,
+        // res.clearCookie('connect.sid');
+        return res.status(200).send("Successfully logged out");
+    })
+}))
