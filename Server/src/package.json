@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "tsc; sudo node app.js",
+    "start:window": "ts-node app.ts",
     "build": "tsc"
   },
   "author": "nuang-ee",
