@@ -2,7 +2,7 @@
   <div id="login-form">
     <v-dialog v-model="dialog" max-width="400">
       <template v-slot:activator="{ on, attrs }">
-        <v-btn color="white" dark v-bind="attrs" v-on="on" text>
+        <v-btn :ripple=false id="no-background-hover" light v-bind="attrs" v-on="on" text>
           Login
         </v-btn>
       </template>
@@ -41,13 +41,14 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default {
-  props: {
-    source: String,
-  },
+    name: "LoginForm"
 };
 </script>
 
 <style scoped>
+#no-background-hover::before {
+   background-color: transparent !important;
+}
 </style>

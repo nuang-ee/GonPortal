@@ -5,7 +5,6 @@
 
       <v-main>
         <router-view></router-view>
-        <login-form/>
 
       </v-main>
     </v-app>

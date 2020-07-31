@@ -1,8 +1,17 @@
 import Vue from "vue";
-import VueRouter, { RouteConfig } from "vue-router";
+import VueRouter, { Route, RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
+import Login from "../views/Login.vue";
+import Register from "../views/Register.vue"
+import { RouterLinkStub } from '@vue/test-utils';
 
 Vue.use(VueRouter);
+
+const requireAuth = (to: Route, from: Route, next: Function) => {
+  const isAuthenticated = false
+  if (isAuthenticated) return next()
+  next('/login?returnPath='.concat('', to.path))
+}
 
 const routes: Array<RouteConfig> = [
   {
@@ -20,9 +29,25 @@ const routes: Array<RouteConfig> = [
       import(/* webpackChunkName: "about" */ "../views/About.vue"),
   },
   {
-    path: "/auth/logout",
+    path: "/login",
+    name: "Login",
+    component: Login
+  },
+  {
+    path: "/logout",
     name: "Logout",
   },
+  {
+    path: "/register",
+    name: "Register",
+    component: Register
+  },
+  {
+    path: "/profile",
+    name: 'Profile',
+    component: Home,
+    beforeEnter: requireAuth
+  }
 ];
 
 const router = new VueRouter({
