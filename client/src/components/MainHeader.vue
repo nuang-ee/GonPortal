@@ -68,28 +68,24 @@
       dark
     >
       <v-list v-if="loggedIn">
-        <v-list-item
-          @click="$router({ path: menuForAuthed.route })"
-          v-for="item in menuForAuthed"
-          :key="item.title"
-          link
-        >
+        <v-list-item v-for="item in menuForAuthed" :key="item.title">
           <v-list-item-content>
-            <v-list-item-title>{{ item.title }}</v-list-item-title>
+            <v-list-item-title>
+              <v-btn :href="item.route" text>
+                <span class="mr-2">{{ item.title }}</span>
+              </v-btn></v-list-item-title
+            >
           </v-list-item-content>
         </v-list-item>
       </v-list>
       <v-list v-else>
-        <v-list-item
-          @click="$router({ path: menuForNotAuthed.route })"
-          v-for="item in menuForNotAuthed"
-          :key="item.title"
-          link
-        >
+        <v-list-item v-for="item in menuForNotAuthed" :key="item.title">
           <v-list-item-content>
-            <v-list-item-title>{{
-              item.title
-            }}</v-list-item-title>
+            <v-list-item-title>
+              <v-btn :href="item.route" text>
+                <span class="mr-2">{{ item.title }}</span>
+              </v-btn>
+            </v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>

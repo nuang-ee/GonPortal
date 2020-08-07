@@ -31,3 +31,9 @@ import LoginForm from "./components/LoginForm.vue"
 })
 export default class App extends Vue {};
 </script>
+
+<style scoped>
+  #app {
+    overflow-x: hidden;
+  }
+</style>
