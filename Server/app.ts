@@ -7,6 +7,7 @@ import { AccountControlRouter } from "./Controllers/AccountController"
 import * as bodyParser from "body-parser"
 import session from "express-session"
 import { KEY } from "./config"
+import cors from "cors"
 
 class App {
     public app: express.Application;
@@ -44,6 +45,13 @@ app.use(session({
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
+// To enable CORS from frontend.
+const corsOptions = {
+    origin: process.env.FRONTEND_URI,
+    optionsSuccessStatus: 200
+}
+app.use(cors(corsOptions));
 
 app.use("/users", AccountControlRouter);
 
