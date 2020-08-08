@@ -78,7 +78,8 @@ import Component from "vue-class-component";
 
 import axios, { AxiosResponse } from "axios";
 
-const backendURI = process.env.BACKEND_URI || "http://localhost:18081";
+//FIXME : process.env backend_uri is not working.
+const backendURI = process.env.VUE_APP_BACKEND_URI || "http://localhost:18081";
 
 @Component({
   name: "LoginForm",
@@ -104,8 +105,7 @@ const backendURI = process.env.BACKEND_URI || "http://localhost:18081";
         username: this.$data.username,
         password: this.$data.password,
       };
-      axios
-        .post(`${backendURI}/users/auth/login`)
+      axios.post(`${backendURI}/users/auth/login`)
         .then((res: AxiosResponse<any>) => {
           if (res.data.includes("invalid")) {
             this.$data.loginError = true;

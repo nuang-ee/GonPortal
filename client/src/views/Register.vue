@@ -127,25 +127,24 @@ import Component from "vue-class-component";
         ]
       },
       conditions: false,
-      content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur sodales ligula in libero. Sed dignissim lacinia nunc.`,
       snackbar: false,
       terms: false,
       defaultForm,
     };
   },
 
-//   computed: {
-//     formIsValid() {
-//       return (
-//         this.form.username &&
-//         this.form.password &&
-//         this.form.name &&
-//         this.form.sNum &&
-//         this.form.semester &&
-//         this.form.email
-//       );
-//     },
-//   }
+  computed: {
+    formIsValid() {
+      return (
+        this.$data.form.username &&
+        this.$data.form.password &&
+        this.$data.form.name &&
+        this.$data.form.sNum &&
+        this.$data.form.semester &&
+        this.$data.form.email
+      );
+    },
+  }
 })
 export default class Register extends Vue {}
 </script>
