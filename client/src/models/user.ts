@@ -8,21 +8,13 @@ export default class User {
   phoneNum: string;
   semester: string;
   
-  constructor(
-    username: string,
-    email: string,
-    password: string,
-    sNum: string,
-    name: string,
-    phoneNum: string,
-    semester: string
-  ) {
-    this.username = username;
-    this.email = email;
-    this.password = password;
-    this.sNum = sNum;
-    this.name = name;
-    this.phoneNum = phoneNum;
-    this.semester = semester;
+  constructor(obj?: User) {
+    this.username = obj?.username || "";
+    this.email = obj?.email || "";
+    this.password = obj?.password || "";
+    this.sNum = obj?.sNum || "";
+    this.name = obj?.name || "";
+    this.phoneNum = obj?.phoneNum || "";
+    this.semester = obj?.semester || "";
   }
 }

@@ -85,7 +85,7 @@ const backendURI = process.env.VUE_APP_BACKEND_URI || "http://localhost:18081";
 export default class Home extends Vue {
   valid = true;
   loading = false;
-  user: User = new User("", "", "", "", "", "", "");
+  user: User = new User();
   usernameRules: Array<Function> = [
     (v: string) => v || "Username is required",
   ];
