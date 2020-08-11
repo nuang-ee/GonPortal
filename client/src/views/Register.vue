@@ -8,73 +8,86 @@
       <v-card-text>
         <v-container>
           <small>all fields are required.</small>
-
-          <v-row>
-            <v-col cols="12">
-              <v-text-field
-                v-model="form.username"
-                color="teal lighten-2"
-                label="Username*"
-                hint="로그인 시 이용됩니다."
-                :rules="rules.username"
-                persistent-hint
-                required
-              >
-              </v-text-field>
-            </v-col>
-            <v-col cols="12">
-              <v-text-field
-                v-model="form.password"
-                color="teal lighten-2"
-                label="Password*"
-                type="password"
-                :rules="rules.password"
-                required
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12" sm="6" md="4">
-              <v-text-field
-                v-model="form.name"
-                color="teal lighten-2"
-                label="이름*"
-                :rules="rules.text"
-                required
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12" sm="6" md="4">
-              <v-text-field
-                v-model="form.sNum"
-                color="teal lighten-2"
-                label="학번*"
-                hint="ex) 20151684"
-                :rules="rules.num"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12" sm="6" md="4">
-              <v-select
-                v-model="form.semester"
-                color="teal lighten-2"
-                label="재학 학기*"
-                hint="ex) 현재 3학기째 재학중 -> '3'"
-                persistent-hint
-                :items="items"
-                :rules="rules.text"
-                required
-              ></v-select>
-            </v-col>
-            <v-col cols="12">
-              <v-text-field
-                v-model="form.email"
-                color="teal lighten-2"
-                label="Email*"
-                hint="카이스트 구성원 인증을 위하여 카이스트 메일이어야 합니다."
-                persistent-hint
-                :rules="rules.text"
-                required
-              >
-              </v-text-field>
-            </v-col>
-          </v-row>
+          <v-form ref="form" v-model="valid">
+            <v-row>
+              <v-col cols="12" sm="6" md="6">
+                <v-text-field
+                  v-model="user.username"
+                  color="teal lighten-2"
+                  label="Username*"
+                  hint="로그인 시 이용됩니다."
+                  :rules="rules.username"
+                  persistent-hint
+                  required
+                >
+                </v-text-field>
+              </v-col>
+              <v-col cols="12" sm="6" md="6">
+                <v-text-field
+                  v-model="user.password"
+                  color="teal lighten-2"
+                  label="Password*"
+                  type="password"
+                  :rules="rules.password"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="6" md="6">
+                <v-text-field
+                  v-model="user.name"
+                  color="teal lighten-2"
+                  label="이름*"
+                  :rules="rules.text"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="6" md="6">
+                <v-text-field
+                  v-model="user.sNum"
+                  color="teal lighten-2"
+                  label="학번*"
+                  hint="ex) 20151684"
+                  :rules="rules.num"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="6" md="4">
+                <v-select
+                  v-model="user.semester"
+                  color="teal lighten-2"
+                  label="재학 학기*"
+                  hint="ex) 현재 3학기째 재학중 -> '3'"
+                  persistent-hint
+                  :items="items"
+                  :rules="rules.text"
+                  required
+                ></v-select>
+              </v-col>
+              <v-col cols="12" sm="6" md="4">
+                <v-text-field
+                  v-model="user.email"
+                  color="teal lighten-2"
+                  label="Email*"
+                  hint="카이스트 구성원 인증을 위하여 카이스트 메일이어야 합니다."
+                  persistent-hint
+                  :rules="rules.text"
+                  required
+                >
+                </v-text-field>
+              </v-col>
+                            <v-col cols="12" sm="6" md="4">
+                <v-text-field
+                  v-model="user.phoneNum"
+                  color="teal lighten-2"
+                  label="phone number*"
+                  hint="리크루팅 관련 정보 전달을 위해 사용되며, 이후 폐기됩니다."
+                  persistent-hint
+                  :rules="rules.text"
+                  required
+                >
+                </v-text-field>
+              </v-col>
+            </v-row>
+          </v-form>
         </v-container>
       </v-card-text>
       <v-card-actions>
@@ -83,70 +96,125 @@
           class="mb-1 mr-3"
           color="teal accent-4"
           text
-          @click="dialog = false"
+          :disabled="!valid || loading"
+          v-on:click="handleRegister"
           >Register</v-btn
         >
       </v-card-actions>
     </v-card>
+    <v-snackbar v-model="viewRegisterStatus" :timeout="timeout">
+      {{ resultMessage }}
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          color="teal accent-4"
+          text
+          v-bind="attrs"
+          @click="viewRegisterStatus = false"
+        >
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-row>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-@Component ({
-  name: "Register",
-  data: () => {
-    const defaultForm = Object.freeze({
-      username: "",
-      password: "",
-      name: "",
-      sNum: "",
-      semester: "",
-      email: "",
-    });
+import { Watch } from "vue-property-decorator";
+import User from "../models/user";
+import * as _ from "lodash";
 
-    return {
-      items: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-      form: Object.assign({}, defaultForm),
-      rules: {
-        num: [
-          (val: string) => (val || "").length > 0 || "This field is required",
-          (val: string) => (!isNaN(Number(val))) || "Student number should only contain numbers",
-        ],
-        text: [
-          (val: string) => (val || "").length > 0 || "This field is required",
-        ],
-        username: [
-            (val: string) => (val || "").length > 0 || "This field is required",
-            (val: string) => (val && val.length >= 4 && val.length <= 20) || "Username should be 4 to 20 characters long." 
-        ],
-        password: [
-            (val: string) => (val || "").length > 0 || "This field is required",
-            (val: string) => (val && val.length >= 8 && val.length <= 20) || "password should be 8 to 20 characters long." 
-        ]
-      },
-      conditions: false,
-      snackbar: false,
-      terms: false,
-      defaultForm,
-    };
-  },
+@Component({})
+export default class Register extends Vue {
+  // Data
+  items: Array<string> = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+  user: User = new User("", "", "", "", "", "", "");
+  rules: any = {
+    num: [
+      (val: string) => (val || "").length > 0 || "This field is required",
+      (val: string) =>
+        !isNaN(Number(val)) || "Student number should only contain numbers",
+    ],
+    text: [(val: string) => (val || "").length > 0 || "This field is required"],
+    username: [
+      (val: string) => (val || "").length > 0 || "This field is required",
+      (val: string) =>
+        (val && val.length >= 4 && val.length <= 20) ||
+        "Username should be 4 to 20 characters long.",
+    ],
+    password: [
+      (val: string) => (val || "").length > 0 || "This field is required",
+      (val: string) =>
+        (val && val.length >= 8 && val.length <= 20) ||
+        "password should be 8 to 20 characters long.",
+    ],
+  };
+  valid = false;
+  conditions = false;
+  loading = false;
+  viewRegisterStatus = false;
+  resultMessage = "";
+  timeout = 2000;
 
-  computed: {
-    formIsValid() {
-      return (
-        this.$data.form.username &&
-        this.$data.form.password &&
-        this.$data.form.name &&
-        this.$data.form.sNum &&
-        this.$data.form.semester &&
-        this.$data.form.email
-      );
-    },
+  // watcher
+  @Watch("user")
+  onPropertyChanged(value: User, oldValue: User) {
+    this.debouncedCheckValid();
   }
-})
-export default class Register extends Vue {}
+
+  // Component methods
+  async handleRegister() {
+    this.loading = true;
+    if (this.formIsValid) {
+      try {
+        const registerResult = await this.$store.dispatch("auth/register", this.user);
+        if (registerResult) {
+            this.loading = false;
+            alert("register success");
+            this.$router.push("/home");
+        }
+      }
+      catch (e) {
+        this.loading = false;
+        this.viewRegisterStatus = true;
+        this.resultMessage = e.toString();
+      }
+    }
+  }
+  checkValid() {
+    console.log(this.formIsValid);
+    if (this.formIsValid) {
+      this.valid = true;
+    }
+  }
+
+  debouncedCheckValid() {
+    _.debounce(this.checkValid, 500);
+  }
+
+  // computed values.
+  get formIsValid() {
+    return (
+      this.user.username &&
+      this.user.password &&
+      this.user.name &&
+      this.user.sNum &&
+      this.user.semester &&
+      this.user.email
+    );
+  }
+  get loggedIn() {
+    return this.$store.state.auth.status.loggedIn;
+  }
+
+  // Lifecycle hooks
+  mounted() {
+    if (this.loggedIn) {
+      this.$router.push("/home");
+    }
+  }
+}
 </script>
 
 <style scoped></style>

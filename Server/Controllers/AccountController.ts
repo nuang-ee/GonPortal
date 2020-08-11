@@ -11,15 +11,17 @@ export const AccountControlRouter = express.Router();
 // FIXME: replace all response send, with proper vue.js actions.
 
 /* NEW ACCOUNT */
-AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
+AccountControlRouter.post('/auth/register', asyncHandler(async (req, res) => {
     const { uid, password, sNum, name, phoneNum } = req.body;
     let email = req.body.email;
     if ( !uid || !password || !sNum || !name || !email || !phoneNum ) {
+        console.log("10");
         return res.status(400).send("Invalid Request");
     }
 
     const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if (!emailRegex.test(email)) {
+        console.log("1");
         return res.status(400).send("Invalid Email Form");
     }
 
@@ -31,19 +33,23 @@ AccountControlRouter.post('/register', asyncHandler(async (req, res) => {
     const whiteList: string[] = ["kaist.ac.kr"];
     const emailDomain = email.split("@")[1];
     if (!whiteList.includes(emailDomain)) {
+        console.log("2");
         return res.status(400).send("Sorry, we only allow KAIST students.");
     }
 
     // FIXME : edit response to show some toast popup or something, instead of raw text.
     if (await NewbieAccount.countDocuments({ uid: uid }) > 0) {
+        console.log("3");
         return res.status(400).send("Username Already Exists");
     }
 
     if (await NewbieAccount.countDocuments({ sNum: sNum }) > 0) {
+        console.log("4");
         return res.status(400).send("Already Registered Student");
     }
 
     if (await NewbieAccount.countDocuments({ email: email }) > 0) {
+        console.log("5");
         return res.status(400).send("Already Registered email address");
     }
 
