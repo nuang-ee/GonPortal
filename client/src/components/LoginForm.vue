@@ -23,7 +23,7 @@
         <v-card-text>
           <v-form v-model="valid">
             <v-text-field
-              v-model="username"
+              v-model="user.username"
               class="mt-6"
               label="Username"
               name="username"
@@ -33,7 +33,7 @@
             ></v-text-field>
 
             <v-text-field
-              v-model="password"
+              v-model="user.password"
               id="password"
               label="Password"
               name="password"
@@ -41,14 +41,14 @@
               :rules="passwordRules"
               type="password"
             ></v-text-field>
-            <v-snackbar v-model="loginError" :timeout="timeout">
-              {{ errorText }}
+            <v-snackbar v-model="viewLoginStatus" :timeout="timeout">
+              {{ resultMessage }}
               <template v-slot:action="{ attrs }">
                 <v-btn
                   color="teal accent-4"
                   text
                   v-bind="attrs"
-                  @click="loginError = false"
+                  @click="viewLoginStatus = false"
                 >
                   Close
                 </v-btn>
@@ -76,50 +76,58 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 
-import axios, { AxiosResponse } from "axios";
+import User from "../models/user";
 
 //FIXME : process.env backend_uri is not working.
 const backendURI = process.env.VUE_APP_BACKEND_URI || "http://localhost:18081";
 
-@Component({
-  name: "LoginForm",
-  data: function() {
-    return {
-      valid: true,
-      loading: false,
-      username: "",
-      usernameRules: [(v: string) => !!v || "Username is required"],
-      password: "",
-      passwordRules: [(v: string) => !!v || "Password is required"],
+@Component({})
+export default class Home extends Vue {
+  valid = true;
+  loading = false;
+  user: User = new User("", "", "", "", "", "", "");
+  usernameRules: Array<Function> = [
+    (v: string) => v || "Username is required",
+  ];
+  passwordRules: Array<Function> = [
+    (v: string) => v || "Password is required",
+  ];
 
-      loginError: false,
-      errorText: "invalid username or password",
-      timeout: 2000
-    };
-  },
-  methods: {
-    // TODO: fix signIn with proper function signature..
-    signIn: async function(event: Event) {
-      console.log(this.$data.username, this.$data.password);
-      const data = {
-        username: this.$data.username,
-        password: this.$data.password,
-      };
-      axios.post(`${backendURI}/users/auth/login`)
-        .then((res: AxiosResponse<any>) => {
-          if (res.data.includes("invalid")) {
-            this.$data.loginError = true;
-          }
-        })
-        //FIXME : what if on error?
-        .catch((err: any) => console.log(err))
-        .finally(() => {
-          this.$data.loading = false;
-        });
-    },
-  },
-})
-export default class Home extends Vue {}
+  viewLoginStatus = false;
+  resultMessage = "";
+  timeout = 2000;
+
+  // component methods.
+  handleLogin() {
+    this.loading = true;
+    if (this.user.username && this.user.password) {
+      this.$store.dispatch("auth/login", this.$data.user).then(
+        () => {
+          this.loading = false;
+          alert("login success");
+          this.$router.push("/home");
+        },
+        (error) => {
+          this.loading = false;
+          this.viewLoginStatus = true;
+          this.resultMessage = "invalid username or password";
+        }
+      );
+    }
+  }
+
+  // Computed properties.
+  get loggedIn() {
+    return this.$store.state.auth.status.loggedIn;
+  }
+
+  // Lifecycle Hooks.
+  created() {
+    if (this.loggedIn) {
+      this.$router.push("/home");
+    }
+  }
+}
 </script>
 
 <style scoped>
