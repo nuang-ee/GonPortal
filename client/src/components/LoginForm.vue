@@ -83,36 +83,38 @@ const backendURI = process.env.VUE_APP_BACKEND_URI || "http://localhost:18081";
 
 @Component({})
 export default class Home extends Vue {
+  // Rules
+  requiredRule = (val: string) => val?.length || "This field is required";
+
+  // Data
   valid = true;
   loading = false;
   user: User = new User();
-  usernameRules: Array<Function> = [
-    (v: string) => v || "Username is required",
-  ];
-  passwordRules: Array<Function> = [
-    (v: string) => v || "Password is required",
-  ];
+  usernameRules: Array<Function> = [ this.requiredRule ];
+  passwordRules: Array<Function> = [ this.requiredRule ];
 
   viewLoginStatus = false;
   resultMessage = "";
   timeout = 2000;
 
   // component methods.
-  handleLogin() {
+  async handleLogin() {
     this.loading = true;
     if (this.user.username && this.user.password) {
-      this.$store.dispatch("auth/login", this.$data.user).then(
-        () => {
+      try {
+        const registerResult = await this.$store.dispatch("auth/login", this.$data.user);
+        if (registerResult) {
           this.loading = false;
           alert("login success");
           this.$router.push("/home");
-        },
+        }
+      } catch (e) {
         (error) => {
           this.loading = false;
           this.viewLoginStatus = true;
           this.resultMessage = "invalid username or password";
-        }
-      );
+        };
+      }
     }
   }
 
