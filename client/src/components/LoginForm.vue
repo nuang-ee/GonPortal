@@ -60,7 +60,7 @@
           <v-spacer></v-spacer>
           <v-btn
             :disabled="!valid || loading"
-            v-on:click="signIn"
+            v-on:click="handleLogin"
             class="mr-3 mb-3"
             color="light-green darken-3"
             dark
@@ -87,6 +87,7 @@ export default class Home extends Vue {
   requiredRule = (val: string) => val?.length || "This field is required";
 
   // Data
+  dialog = false;
   valid = true;
   loading = false;
   user: User = new User();
@@ -106,14 +107,14 @@ export default class Home extends Vue {
         if (registerResult) {
           this.loading = false;
           alert("login success");
-          this.$router.push("/home");
+          this.dialog = false;
+          this.$router.push("/");
         }
       } catch (e) {
-        (error) => {
-          this.loading = false;
-          this.viewLoginStatus = true;
-          this.resultMessage = "invalid username or password";
-        };
+        this.loading = false;
+        this.viewLoginStatus = true;
+        this.resultMessage = "invalid username or password";
+        alert(e.toString());
       }
     }
   }

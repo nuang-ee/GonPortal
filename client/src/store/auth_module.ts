@@ -12,17 +12,16 @@ export const auth: Module<any, any> = {
   namespaced: true,
   state: initialState,
   actions: {
-    login({ commit }, user) {
-      return AuthService.login(user).then(
-        (user) => {
-          commit("loginSuccess", user);
-          return Promise.resolve(user);
-        },
-        (error) => {
-          commit("loginFailure");
-          return Promise.reject(error);
-        }
-      );
+    async login ({ commit }, user) {
+      const loginResult = await AuthService.login(user);
+      if (loginResult) {
+        commit("loginSuccess", user);
+        return Promise.resolve(user);
+      }
+      else {
+        commit("loginFailure");
+        return Promise.reject(loginResult);
+      }
     },
     logout({ commit }) {
       AuthService.logout();

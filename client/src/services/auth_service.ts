@@ -6,19 +6,14 @@ import User from "../models/user";
 const API_URL = "http://localhost:18081/users/auth";
 
 class AuthService {
-  login(user: User) {
-    return axios
-      .post(API_URL + "signin", {
+  async login(user: User) {
+    const response = await axios.post(`${API_URL}/login`, {
         username: user.username,
-        password: user.password,
-      })
-      .then((response) => {
-        if (response.data.accessToken) {
-          localStorage.setItem("user", JSON.stringify(response.data));
-        }
-
-        return response.data;
-      });
+        password: user.password
+    });
+    if (response.data.accessToken) localStorage.setItem("user", JSON.stringify(response.data));
+    
+    return response.data;
   }
 
   logout() {

@@ -145,7 +145,6 @@ AccountControlRouter.post('/auth/login', asyncHandler(async (req, res) => {
         req.session.LoggedIn = true;
 
         // req.session.save is done implicitly, on res.send
-        // FIXME : redirect to main page.
         return res.send("you have logged in");
     }
 }));
