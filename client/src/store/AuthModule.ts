@@ -1,4 +1,4 @@
-import AuthService from "../services/auth_service";
+import AuthService from "../services/AuthService";
 import { Module } from 'vuex'
 import { register } from 'register-service-worker';
 
