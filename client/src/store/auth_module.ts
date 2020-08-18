@@ -1,5 +1,6 @@
 import AuthService from "../services/auth_service";
 import { Module } from 'vuex'
+import { register } from 'register-service-worker';
 
 const userGetResult = localStorage.getItem("user");
 const user = userGetResult ? JSON.parse(userGetResult) : null;
@@ -16,28 +17,27 @@ export const auth: Module<any, any> = {
       const loginResult = await AuthService.login(user);
       if (loginResult) {
         commit("loginSuccess", user);
-        return Promise.resolve(user);
+        return user;
       }
       else {
         commit("loginFailure");
-        return Promise.reject(loginResult);
+        return loginResult;
       }
     },
     logout({ commit }) {
       AuthService.logout();
       commit("logout");
     },
-    register({ commit }, user) {
-      return AuthService.register(user).then(
-        (response) => {
+    async register({ commit }, user) {
+      const registerResult = await AuthService.register(user);
+      if (registerResult) {
           commit("registerSuccess");
-          return Promise.resolve(response.data);
-        },
-        (error) => {
-          commit("registerFailure");
-          return Promise.reject(error);
+          return registerResult.data;
         }
-      );
+      else {
+          commit("registerFailure");
+          return registerResult;
+        }
     },
   },
   mutations: {
