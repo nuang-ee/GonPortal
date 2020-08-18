@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { INewbieAccount, NewbieAccountSchema } from "../Documents/AccountDocument";
+import { INewbieAccount, NewbieAccountSchema } from "../Documents/Recruitment/AccountDocument";
 
 const mongodbURI: string = process.env.MONGO_URI || 'mongodb://localhost:27017/portal_newbie_dev';
 const mongodbOption = {

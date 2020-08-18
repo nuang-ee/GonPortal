@@ -3,11 +3,11 @@ import * as dotenv from "dotenv"
 dotenv.config();
 
 import * as express from "express"
-import { AccountControlRouter } from "./Controllers/AccountController"
 import * as bodyParser from "body-parser"
 import session from "express-session"
 import { KEY } from "./config"
 import cors from "cors"
+import { mainRouter } from "./router"
 
 class App {
     public app: express.Application;
@@ -53,6 +53,6 @@ const corsOptions = {
 }
 app.use(cors(corsOptions));
 
-app.use("/users", AccountControlRouter);
+app.use("/", mainRouter);
 
 app.listen(port, () => console.log(`server running on PORT ${port}`));

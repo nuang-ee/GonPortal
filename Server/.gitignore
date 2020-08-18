@@ -1,0 +1,6 @@
+# to hide key.
+config.ts
+
+**/*.js
+**/*.map
+
