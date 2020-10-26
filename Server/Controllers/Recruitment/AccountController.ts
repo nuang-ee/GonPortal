@@ -3,18 +3,17 @@ import asyncHandler from "express-async-handler";
 import { NewbieAccount } from "../../utils/db";
 import { sendAuthMail, verifyAuthMail } from "../../utils/mailAuth";
 import { Auth } from "../../Core/Auth";
+import { NewbieAuth } from "../../Core/NewbieAuth";
 import * as Mongoose from "mongoose";
 import { INewbieAccount } from "../../Documents/Recruitment/AccountDocument";
 
 export const AccountControlRouter = express.Router();
 
-// FIXME: replace all response send, with proper vue.js actions.
-
 /* NEW ACCOUNT */
 AccountControlRouter.post('/auth/register', asyncHandler(async (req, res) => {
-    const { uid, password, sNum, name, phoneNum } = req.body;
+    const { username, password, sNum, name, phoneNum } = req.body;
     let email = req.body.email;
-    if ( !uid || !password || !sNum || !name || !email || !phoneNum ) {
+    if ( !username || !password || !sNum || !name || !email || !phoneNum ) {
         return res.status(400).send("Invalid Request");
     }
 
@@ -35,7 +34,7 @@ AccountControlRouter.post('/auth/register', asyncHandler(async (req, res) => {
     }
 
     // FIXME : edit response to show some toast popup or something, instead of raw text.
-    if (await NewbieAccount.countDocuments({ uid: uid }) > 0) {
+    if (await NewbieAccount.countDocuments({ username: username }) > 0) {
         return res.status(400).send("Username Already Exists");
     }
 
@@ -50,7 +49,8 @@ AccountControlRouter.post('/auth/register', asyncHandler(async (req, res) => {
     const pwHash = await Auth.hash(req.body.password);
 
     const account = await NewbieAccount.create({
-        uid: uid,
+        role: 'guest',
+        username: username,
         password: pwHash,
         sNum: sNum,
         name: name,
@@ -123,24 +123,19 @@ AccountControlRouter.put('/update/:id', asyncHandler(async (req, res) => {
 
 /* LOGIN */
 AccountControlRouter.post('/auth/login', asyncHandler(async (req, res) => {
-    const { uid, password } = req.body;
+    const { username, password } = req.body;
 
-    if (req.session?._id) {
-        return res.send('<h1>already Logged In</h1>');
-    } else {
-        const user = await NewbieAccount.findOne({uid: uid});
-        if (!user?.password || !(await Auth.isValid(password, user.password)))
-            return res.send("invalid username or password");
-        
-        if (!req.session) return res.status(400).send("invalid request");
+    const user = await NewbieAccount.findOne({username: username});
+    if (!user || !(await Auth.isValid(password, user.password)))
+        return res.status(400).send("invalid username or password");
 
-        req.session._id = user._id;
-        req.session.Authed = user.emailAuthed;
-        req.session.LoggedIn = true;
-
-        // req.session.save is done implicitly, on res.send
-        return res.send("you have logged in");
+    const {jwtToken, refreshToken} = await NewbieAuth.generateToken(user);
+    const response = {
+        "status": "Logged in",
+        "token": jwtToken,
+        "refreshToken": refreshToken.token,
     }
+    return res.status(200).json(response);
 }));
 
 /* LOGOUT */
