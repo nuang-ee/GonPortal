@@ -115,7 +115,7 @@ AccountControlRouter.get('/auth/mail/verify', asyncHandler(async (req, res) => {
 }));
 
 /* UPDATE ACCOUNT INFORMATION */
-AccountControlRouter.put('/update/:id', asyncHandler(async (req, res) => {
+AccountControlRouter.put('/update/:id', asyncHandler(NewbieAuth.authenticate), asyncHandler(async (req, res) => {
     // TODO: add validation logic
     await NewbieAccount.findByIdAndUpdate(req.params.id, req.body, {new: true});
     res.status(200).send("Succeed to Update Account");
@@ -135,10 +135,13 @@ AccountControlRouter.post('/auth/login', asyncHandler(async (req, res) => {
         "token": jwtToken,
         "refreshToken": refreshToken.token,
     }
+    res.cookie("token", jwtToken, { secure: true, httpOnly: true });
+    res.cookie("refreshToken", refreshToken.token, { secure: true, httpOnly: true });
     return res.status(200).json(response);
 }));
 
 /* LOGOUT */
+// TODO: change to jwt style
 AccountControlRouter.get('/auth/logout', asyncHandler(async (req, res) => {
     if (!req.session) return res.status(400).send("You haven't logged in");
 

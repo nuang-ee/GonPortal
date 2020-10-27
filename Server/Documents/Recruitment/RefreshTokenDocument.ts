@@ -1,13 +1,14 @@
 import * as mongoose from "mongoose";
+import { JWT_CONFIG } from "../../config"
 
 export interface INewbieRefreshToken extends mongoose.Document {
-    user: string;
+    username: string;
     token: string;
     expires: Date;
 }
 
 export const NewbieRefreshTokenSchema = new mongoose.Schema({
-    user: { type: String, required: true },
+    username: { type: String, required: true },
     token: { type: String, required: true },
-    expires: { type: Date, required: true}
+    createdAt: { type: Date, expires: JWT_CONFIG.REFRESH_LIFE, default: Date.now }
 }, { collection: 'NewbieRefreshTokenDocument' });
