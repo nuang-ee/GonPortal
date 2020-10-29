@@ -12,6 +12,7 @@ export const AccountControlRouter = express.Router();
 
 /* NEW ACCOUNT */
 AccountControlRouter.post('/auth/register', asyncHandler(async (req, res) => {
+    console.log(req.body);
     const { uid, password, sNum, name, phoneNum } = req.body;
     let email = req.body.email;
     if ( !uid || !password || !sNum || !name || !email || !phoneNum ) {
@@ -58,12 +59,12 @@ AccountControlRouter.post('/auth/register', asyncHandler(async (req, res) => {
         emailAuthed: false,
         phoneNum: phoneNum,
         resume: "",
-        solved: 0,
+        solved: [],
         created: Date.now()
     })
 
     sendAuthMail(account._id, email, (err, info) => { if (err) console.log(err, info) });
-    
+
     return res.status(200).send("<p>Successfully added your account! Check your email to authenticate your account.</p>");
 }));
 
@@ -131,7 +132,7 @@ AccountControlRouter.post('/auth/login', asyncHandler(async (req, res) => {
         const user = await NewbieAccount.findOne({uid: uid});
         if (!user?.password || !(await Auth.isValid(password, user.password)))
             return res.send("invalid username or password");
-        
+
         if (!req.session) return res.status(400).send("invalid request");
 
         req.session._id = user._id;

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { INewbieAccount, NewbieAccountSchema } from "../Documents/Recruitment/AccountDocument";
+import { IRecruitChallenge, RecruitChallengeSchema } from "../Documents/Recruitment/ChallengeDocument";
 
 const mongodbURI: string = process.env.MONGO_URI || 'mongodb://localhost:27017/portal_newbie_dev';
 const mongodbOption = {
@@ -19,3 +20,4 @@ mongoose.connect(mongodbURI, mongodbOption)
 });
 
 export const NewbieAccount = mongoose.model<INewbieAccount>("NewbieAccount", NewbieAccountSchema);
+export const RecruitChallenge = mongoose.model<IRecruitChallenge>("RecruitChallenge", RecruitChallengeSchema);
