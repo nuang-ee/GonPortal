@@ -1,9 +1,9 @@
 import * as jwt from "jsonwebtoken";
-import { JWT_CONFIG } from "../config";
-import { NewbieAccount, NewbieRefreshToken } from "../utils/db";
-import { INewbieAccount } from "../Documents/Recruitment/AccountDocument";
+import { JWT_CONFIG } from "../../config";
+import { NewbieAccount, NewbieRefreshToken } from "../db";
+import { INewbieAccount } from "../../Documents/Recruitment/AccountDocument";
 import { Request, Response } from "express";
-import { INewbieRefreshToken } from "../Documents/Recruitment/RefreshTokenDocument";
+import { INewbieRefreshToken } from "../../Documents/Recruitment/RefreshTokenDocument";
 
 
 interface IToken {
