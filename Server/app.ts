@@ -30,18 +30,6 @@ const app: express.Application = new App().app;
 const mongoStore = require('connect-mongo')(session);
 const mongodbURI: string = process.env.MONGO_URI || 'mongodb://localhost:27017/portal_newbie_dev';
 
-app.use(session({
-    secret: KEY.sess_secret,
-    resave: false, // save session only when modified.
-    saveUninitialized: true,
-    cookie: {
-        maxAge: 1000 * 60 * 60,
-    },
-    store: new mongoStore({
-        url: mongodbURI,
-        collection: "sessions",
-    })
-}));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
