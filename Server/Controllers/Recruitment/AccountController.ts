@@ -12,7 +12,6 @@ export const AccountControlRouter = express.Router();
 
 /* NEW ACCOUNT */
 AccountControlRouter.post('/auth/register', asyncHandler(async (req, res) => {
-    console.log(req.body);
     const { uid, password, sNum, name, phoneNum } = req.body;
     let email = req.body.email;
     if ( !uid || !password || !sNum || !name || !email || !phoneNum ) {
