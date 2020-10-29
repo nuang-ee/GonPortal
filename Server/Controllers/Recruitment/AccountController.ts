@@ -1,9 +1,9 @@
 import * as express from "express";
 import asyncHandler from "express-async-handler";
-import { NewbieAccount } from "../../utils/db";
-import { sendAuthMail, verifyAuthMail } from "../../utils/mailAuth";
+import { NewbieAccount } from "../../Core/db";
+import { sendAuthMail, verifyAuthMail } from "../../Core/Recruitment/mailAuth";
 import { Auth } from "../../Core/Auth";
-import { NewbieAuth } from "../../Core/NewbieAuth";
+import { NewbieAuth } from "../../Core/Recruitment/NewbieAuth";
 import * as Mongoose from "mongoose";
 import { INewbieAccount } from "../../Documents/Recruitment/AccountDocument";
 
