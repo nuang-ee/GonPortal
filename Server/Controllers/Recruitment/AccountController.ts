@@ -142,19 +142,7 @@ AccountControlRouter.post('/auth/login', asyncHandler(async (req, res) => {
 
 /* LOGOUT */
 // TODO: change to jwt style
-AccountControlRouter.get('/auth/logout', asyncHandler(async (req, res) => {
-    if (!req.session) return res.status(400).send("You haven't logged in");
+// Removed, since it looked unnecessary in jwt style, but if needed,
+// use this address as a logout route.
+// AccountControlRouter.get('/auth/logout', asyncHandler(async (req, res) => {}))
 
-    const _id = req.session._id;
-    if (!_id) return res.status(400).send("Invalid Session");
-
-    req.session.destroy((err) => {
-        if (err) {
-            console.log("error on destroying session");
-            return res.status(500).send("Error on Logout");
-        }
-        // if needed,
-        // res.clearCookie('connect.sid');
-        return res.status(200).send("Successfully logged out");
-    })
-}))
