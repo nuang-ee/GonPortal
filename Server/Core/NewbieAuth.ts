@@ -2,7 +2,6 @@ import * as jwt from "jsonwebtoken";
 import { JWT_CONFIG } from "../config";
 import { NewbieAccount, NewbieRefreshToken } from "../utils/db";
 import { INewbieAccount } from "../Documents/Recruitment/AccountDocument";
-import * as crypto from "crypto";
 import { Request, Response } from "express";
 import { INewbieRefreshToken } from "../Documents/Recruitment/RefreshTokenDocument";
 
