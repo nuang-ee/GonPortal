@@ -23,6 +23,6 @@ export const NewbieAccountSchema = new mongoose.Schema({
     emailAuthed: { type: Boolean },
     phoneNum: { type: String, required: true },
     resume: { type: String },
-    solved: [{ type: mongoose.Schema.Types.ObjectId, ref: 'RecruitChallenge' }],
+    solved: [{ type: mongoose.Schema.Types.ObjectId, ref: 'RecruitChallenge', required: true }],
     created: { type: Date },
 }, { collection: 'NewbieAccountDocument' });
