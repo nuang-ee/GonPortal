@@ -5,23 +5,94 @@ import { NewbieAccount } from "../../utils/db";
 import { INewbieAccount } from "../../Documents/Recruitment/AccountDocument";
 import { RecruitChallenge } from "../../utils/db";
 import { IRecruitChallenge } from "../../Documents/Recruitment/ChallengeDocument";
+import { Flag } from "../../Core/Flag";
 
 export const ChallengeControlRouter = express.Router();
 
 // FIXME: replace all response send, with proper vue.js actions.
 
 ChallengeControlRouter.post('/create', asyncHandler(async (req, res) => {
-    return res.status(200).send("create");
+    // TODO: make sure that the session is admin's.
+
+    const { name, category, difficulty, description, flag } = req.body;
+    if ( !name || !category || !difficulty || !description || !flag ) {
+        return res.status(400).send("Invalid Request");
+    }
+
+    if (!Flag.isValidFormat(flag)) {
+        return res.status(400).send("Invalid Flag Format");
+    }
+
+    if (await RecruitChallenge.countDocuments({ name: name, category: category }) > 0) {
+        return res.status(400).send("Challenge Already Exists");
+    }
+
+    const challenge = await RecruitChallenge.create({
+        name: name,
+        category: category,
+        difficulty: difficulty,
+        description: description,
+        flag: flag
+    });
+
+    return res.status(200).send(`Challenge ${challenge._id} Created`);
 }));
 
-ChallengeControlRouter.post('/delete', asyncHandler(async (req, res) => {
-    return res.status(200).send("delete");
+ChallengeControlRouter.get('/delete/:_id', asyncHandler(async (req, res) => {
+    // TODO: make sure that the session is admin's.
+
+    const _id = req.params._id;
+
+    // FIXME: handle CastError with Model.exists() callback function.
+    if (!await RecruitChallenge.exists({ _id: _id })) {
+        return res.status(400).send("Challenge Not Exists");
+    }
+
+    await RecruitChallenge.remove({ _id: _id });
+
+    return res.status(200).send(`Challenge ${_id} Deleted`);
 }));
 
-ChallengeControlRouter.post('/update', asyncHandler(async (req, res) => {
-    return res.status(200).send("update");
+ChallengeControlRouter.post('/update/:_id', asyncHandler(async (req, res) => {
+    // TODO: make sure that the session is admin's.
+
+    const _id = req.params._id;
+
+    const { name, category, difficulty, description, flag } = req.body;
+    if ( !name || !category || !difficulty || !description || !flag ) {
+        return res.status(400).send("Invalid Request");
+    }
+
+    // FIXME: handle CastError with Model.exists() callback function.
+    if (!await RecruitChallenge.exists({ _id: _id })) {
+        return res.status(400).send("Challenge Not Exists");
+    }
+
+    const challenge = await RecruitChallenge.findByIdAndUpdate(_id, req.body);
+
+    return res.status(200).send(`Challenge ${_id} Updated`);
 }));
 
-ChallengeControlRouter.post('/submit', asyncHandler(async (req, res) => {
-    return res.status(200).send("submit");
+ChallengeControlRouter.post('/submit/:_id', asyncHandler(async (req, res) => {
+    const _id = req.params._id;
+
+    const { flag } = req.body;
+
+    if ( !flag ) {
+        return res.status(400).send("Invalid Request");
+    }
+
+    // FIXME: handle CastError with Model.findById() callback function.
+    const challenge = await RecruitChallenge.findById(_id, 'flag');
+    if (challenge === null) {
+        return res.status(400).send("Challenge Not Exists");
+    }
+
+    if (flag !== challenge.flag) {
+        return res.status(200).send("Wrong Flag");
+    }
+
+    // TODO: update `solved` field of the NewbieAccount session.
+
+    return res.status(200).send("Correct Flag");
 }));
