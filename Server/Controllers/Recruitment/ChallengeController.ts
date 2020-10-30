@@ -15,7 +15,7 @@ ChallengeControlRouter.post('/create', asyncHandler(async (req, res) => {
     // TODO: make sure that the session is admin's.
 
     const { name, category, difficulty, description, flag } = req.body;
-    if ( !name || !category || !difficulty || !description || !flag ) {
+    if (!name || !category || !difficulty || !description || !flag) {
         return res.status(400).send("Invalid Request");
     }
 
@@ -59,7 +59,7 @@ ChallengeControlRouter.post('/update/:_id', asyncHandler(async (req, res) => {
     const _id = req.params._id;
 
     const { name, category, difficulty, description, flag } = req.body;
-    if ( !name || !category || !difficulty || !description || !flag ) {
+    if (!name || !category || !difficulty || !description || !flag) {
         return res.status(400).send("Invalid Request");
     }
 
@@ -68,22 +68,33 @@ ChallengeControlRouter.post('/update/:_id', asyncHandler(async (req, res) => {
         return res.status(400).send("Challenge Not Exists");
     }
 
-    const challenge = await RecruitChallenge.findByIdAndUpdate(_id, req.body);
+    await RecruitChallenge.findByIdAndUpdate(_id, req.body);
 
     return res.status(200).send(`Challenge ${_id} Updated`);
 }));
 
 ChallengeControlRouter.post('/submit/:_id', asyncHandler(async (req, res) => {
-    const _id = req.params._id;
+    if (!req.session) {
+        return res.status(400).send("You haven't logged in");
+    }
+
+    const _id = req.session._id;
+    if (!_id) {
+        return res.status(400).send("Invalid Session");
+    }
+
+    const user = await NewbieAccount.findById(_id);
+    if (user === null) {
+        return res.status(400).send("Invalid Session");
+    }
 
     const { flag } = req.body;
-
-    if ( !flag ) {
+    if (!flag) {
         return res.status(400).send("Invalid Request");
     }
 
     // FIXME: handle CastError with Model.findById() callback function.
-    const challenge = await RecruitChallenge.findById(_id, 'flag');
+    const challenge = await RecruitChallenge.findById(req.params._id, 'flag');
     if (challenge === null) {
         return res.status(400).send("Challenge Not Exists");
     }
@@ -92,7 +103,12 @@ ChallengeControlRouter.post('/submit/:_id', asyncHandler(async (req, res) => {
         return res.status(200).send("Wrong Flag");
     }
 
-    // TODO: update `solved` field of the NewbieAccount session.
+    if (user.solved.includes(challenge._id)) {
+        return res.status(200).send(`Challenge ${challenge._id} Already Solved`);
+    }
+
+    user.solved.push(challenge._id);
+    await user.save();
 
     return res.status(200).send("Correct Flag");
 }));
