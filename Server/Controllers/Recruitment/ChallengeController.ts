@@ -14,8 +14,8 @@ export const ChallengeControlRouter = express.Router();
 ChallengeControlRouter.post('/create', asyncHandler(async (req, res) => {
     // TODO: make sure that the session is admin's.
 
-    const { name, category, difficulty, description, flag } = req.body;
-    if (!name || !category || !difficulty || !description || !flag) {
+    const { title, category, difficulty, description, flag } = req.body;
+    if (!title || !category || !difficulty || !description || !flag) {
         return res.status(400).send("Invalid Request");
     }
 
@@ -23,12 +23,12 @@ ChallengeControlRouter.post('/create', asyncHandler(async (req, res) => {
         return res.status(400).send("Invalid Flag Format");
     }
 
-    if (await RecruitChallenge.countDocuments({ name: name, category: category }) > 0) {
+    if (await RecruitChallenge.exists({ title: title, category: category })) {
         return res.status(400).send("Challenge Already Exists");
     }
 
     const challenge = await RecruitChallenge.create({
-        name: name,
+        title: title,
         category: category,
         difficulty: difficulty,
         description: description,
@@ -58,8 +58,8 @@ ChallengeControlRouter.post('/update/:_id', asyncHandler(async (req, res) => {
 
     const _id = req.params._id;
 
-    const { name, category, difficulty, description, flag } = req.body;
-    if (!name || !category || !difficulty || !description || !flag) {
+    const { title, category, difficulty, description, flag } = req.body;
+    if (!title || !category || !difficulty || !description || !flag) {
         return res.status(400).send("Invalid Request");
     }
 
