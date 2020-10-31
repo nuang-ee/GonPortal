@@ -2,7 +2,7 @@ import * as nodemailer from "nodemailer";
 import * as crypto from "crypto";
 import * as querystring from "querystring";
 import b64u from "base64url";
-import { MAIL_CONFIG } from "../config";
+import { MAIL_CONFIG } from "../../config";
 
 if (!MAIL_CONFIG.NODEMAILER_USERNAME || !MAIL_CONFIG.NODEMAILER_PASSWORD) {
     console.log('env not set: nodemailer');

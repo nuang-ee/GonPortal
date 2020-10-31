@@ -2,7 +2,8 @@ import * as mongoose from "mongoose";
 import { IRecruitChallenge } from "./ChallengeDocument";
 
 export interface INewbieAccount extends mongoose.Document {
-    uid: string;
+    role: string;
+    username: string;
     password: string;
     sNum: string;
     name: string;
@@ -15,7 +16,8 @@ export interface INewbieAccount extends mongoose.Document {
 }
 
 export const NewbieAccountSchema = new mongoose.Schema({
-    uid: { type: String, required: true, index: 'hashed', unique: true },
+    role: { type: String },
+    username: { type: String, required: true, index: 'hashed', unique: true },
     password: { type: String, required: true },
     sNum: { type: String, required: true },
     name: { type: String, required: true },

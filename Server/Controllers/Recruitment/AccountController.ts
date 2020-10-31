@@ -1,20 +1,19 @@
 import * as express from "express";
 import asyncHandler from "express-async-handler";
-import { NewbieAccount } from "../../utils/db";
-import { sendAuthMail, verifyAuthMail } from "../../utils/mailAuth";
+import { NewbieAccount } from "../../Core/db";
+import { sendAuthMail, verifyAuthMail } from "../../Core/Recruitment/mailAuth";
 import { Auth } from "../../Core/Auth";
+import { NewbieAuth } from "../../Core/Recruitment/NewbieAuth";
 import * as Mongoose from "mongoose";
 import { INewbieAccount } from "../../Documents/Recruitment/AccountDocument";
 
 export const AccountControlRouter = express.Router();
 
-// FIXME: replace all response send, with proper vue.js actions.
-
 /* NEW ACCOUNT */
 AccountControlRouter.post('/auth/register', asyncHandler(async (req, res) => {
-    const { uid, password, sNum, name, phoneNum } = req.body;
+    const { username, password, sNum, name, phoneNum } = req.body;
     let email = req.body.email;
-    if ( !uid || !password || !sNum || !name || !email || !phoneNum ) {
+    if ( !username || !password || !sNum || !name || !email || !phoneNum ) {
         return res.status(400).send("Invalid Request");
     }
 
@@ -35,7 +34,7 @@ AccountControlRouter.post('/auth/register', asyncHandler(async (req, res) => {
     }
 
     // FIXME : edit response to show some toast popup or something, instead of raw text.
-    if (await NewbieAccount.countDocuments({ uid: uid }) > 0) {
+    if (await NewbieAccount.countDocuments({ username: username }) > 0) {
         return res.status(400).send("Username Already Exists");
     }
 
@@ -50,7 +49,8 @@ AccountControlRouter.post('/auth/register', asyncHandler(async (req, res) => {
     const pwHash = await Auth.hash(req.body.password);
 
     const account = await NewbieAccount.create({
-        uid: uid,
+        role: 'guest',
+        username: username,
         password: pwHash,
         sNum: sNum,
         name: name,
@@ -115,7 +115,7 @@ AccountControlRouter.get('/auth/mail/verify', asyncHandler(async (req, res) => {
 }));
 
 /* UPDATE ACCOUNT INFORMATION */
-AccountControlRouter.put('/update/:id', asyncHandler(async (req, res) => {
+AccountControlRouter.put('/update/:id', asyncHandler(NewbieAuth.authenticate), asyncHandler(async (req, res) => {
     // TODO: add validation logic
     await NewbieAccount.findByIdAndUpdate(req.params.id, req.body, {new: true});
     res.status(200).send("Succeed to Update Account");
@@ -123,40 +123,26 @@ AccountControlRouter.put('/update/:id', asyncHandler(async (req, res) => {
 
 /* LOGIN */
 AccountControlRouter.post('/auth/login', asyncHandler(async (req, res) => {
-    const { uid, password } = req.body;
+    const { username, password } = req.body;
 
-    if (req.session?._id) {
-        return res.send('<h1>already Logged In</h1>');
-    } else {
-        const user = await NewbieAccount.findOne({uid: uid});
-        if (!user?.password || !(await Auth.isValid(password, user.password)))
-            return res.send("invalid username or password");
+    const user = await NewbieAccount.findOne({username: username});
+    if (!user || !(await Auth.isValid(password, user.password)))
+        return res.status(400).send("invalid username or password");
 
-        if (!req.session) return res.status(400).send("invalid request");
-
-        req.session._id = user._id;
-        req.session.Authed = user.emailAuthed;
-        req.session.LoggedIn = true;
-
-        // req.session.save is done implicitly, on res.send
-        return res.send("you have logged in");
+    const {jwtToken, refreshToken} = await NewbieAuth.generateToken(user);
+    const response = {
+        "status": "Logged in",
+        "token": jwtToken,
+        "refreshToken": refreshToken.token,
     }
+    res.cookie("token", jwtToken, { secure: true, httpOnly: true });
+    res.cookie("refreshToken", refreshToken.token, { secure: true, httpOnly: true });
+    return res.status(200).json(response);
 }));
 
 /* LOGOUT */
-AccountControlRouter.get('/auth/logout', asyncHandler(async (req, res) => {
-    if (!req.session) return res.status(400).send("You haven't logged in");
+// TODO: change to jwt style
+// Removed, since it looked unnecessary in jwt style, but if needed,
+// use this address as a logout route.
+// AccountControlRouter.get('/auth/logout', asyncHandler(async (req, res) => {}))
 
-    const _id = req.session._id;
-    if (!_id) return res.status(400).send("Invalid Session");
-
-    req.session.destroy((err) => {
-        if (err) {
-            console.log("error on destroying session");
-            return res.status(500).send("Error on Logout");
-        }
-        // if needed,
-        // res.clearCookie('connect.sid');
-        return res.status(200).send("Successfully logged out");
-    })
-}))

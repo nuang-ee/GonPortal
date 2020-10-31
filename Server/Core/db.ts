@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { INewbieAccount, NewbieAccountSchema } from "../Documents/Recruitment/AccountDocument";
+import { INewbieRefreshToken, NewbieRefreshTokenSchema } from "../Documents/Recruitment/RefreshTokenDocument";
 import { IRecruitCategory, RecruitCategorySchema } from "../Documents/Recruitment/CategoryDocument";
 import { IRecruitChallenge, RecruitChallengeSchema } from "../Documents/Recruitment/ChallengeDocument";
 
@@ -21,5 +22,6 @@ mongoose.connect(mongodbURI, mongodbOption)
 });
 
 export const NewbieAccount = mongoose.model<INewbieAccount>("NewbieAccount", NewbieAccountSchema);
+export const NewbieRefreshToken = mongoose.model<INewbieRefreshToken>("NewbieRefreshToken", NewbieRefreshTokenSchema);
 export const RecruitCategory = mongoose.model<IRecruitCategory>("RecruitCategory", RecruitCategorySchema);
 export const RecruitChallenge = mongoose.model<IRecruitChallenge>("RecruitChallenge", RecruitChallengeSchema);
