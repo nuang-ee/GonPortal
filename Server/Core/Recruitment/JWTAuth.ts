@@ -26,9 +26,11 @@ async function generateJwtToken(user: IApplicantAccount) {
 async function generateRefreshToken(user: IApplicantAccount) {
     const refreshToken = await RecruitRefreshToken.create({
         username: user.username,
-        token: jwt.sign(user.username, JWT_CONFIG.REFRESH_SECRET, {
-            expiresIn: JWT_CONFIG.REFRESH_LIFE,
-        }),
+        token: jwt.sign(
+            { username: user.username },
+            JWT_CONFIG.REFRESH_SECRET,
+            { expiresIn: JWT_CONFIG.REFRESH_LIFE }
+        ),
         expires: new Date(Date.now() + JWT_CONFIG.REFRESH_LIFE_NUM),
     });
     await refreshToken.save();
@@ -66,7 +68,9 @@ export class JWTAuth {
             next();
         } catch (e) {
             if (e instanceof jwt.TokenExpiredError) {
-                const givenRefreshToken = req.headers["x-refresh-token"] as string;
+                const givenRefreshToken = req.headers[
+                    "x-refresh-token"
+                ] as string;
                 try {
                     const decoded = jwt.verify(
                         givenRefreshToken,

@@ -40,23 +40,23 @@ AccountControlRouter.post(
         const emailDomain = email.split("@")[1];
         if (!whiteList.includes(emailDomain)) {
             response.message = "sorry, we only allow KAIST students.";
-            return res.status(400).json(response);
+            return res.status(200).json(response);
         }
 
         // FIXME : edit response to show some toast popup or something, instead of raw text.
         if ((await ApplicantAccount.countDocuments({ username: username })) > 0) {
             response.message = "username already exists";
-            return res.status(400).json(response);
+            return res.status(200).json(response);
         }
 
         if ((await ApplicantAccount.countDocuments({ sNum: sNum })) > 0) {
             response.message = "student already registered";
-            return res.status(400).json(response);
+            return res.status(200).json(response);
         }
 
         if ((await ApplicantAccount.countDocuments({ email: email })) > 0) {
             response.message = "email already registered";
-            return res.status(400).json(response);
+            return res.status(200).json(response);
         }
 
         const pwHash = await Auth.hash(req.body.password);
@@ -234,6 +234,11 @@ AccountControlRouter.post(
         };
 
         const { username, password } = req.body;
+        if (!username || !password) {
+            response.message = "invalid request";
+            return res.status(400).json(response);
+        }
+
         const user = await ApplicantAccount.findOne({ username: username });
         if (!user || !(await Auth.isValid(password, user.password))) {
             response.message = "invalid username or password";
