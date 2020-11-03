@@ -6,7 +6,7 @@ import * as express from "express"
 import * as bodyParser from "body-parser"
 import session from "express-session"
 import { KEY } from "./config"
-import cors from "cors"
+import cors, { CorsOptions } from "cors"
 import { mainRouter } from "./router"
 
 class App {
@@ -35,9 +35,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // To enable CORS from frontend.
-const corsOptions = {
-    origin: process.env.FRONTEND_URI,
-    optionsSuccessStatus: 200
+const corsOptions: CorsOptions = {
+    origin: [process.env.FRONTEND_URI || "http://localhost:18080"],
+    optionsSuccessStatus: 200,
+    credentials: true,
 }
 app.use(cors(corsOptions));
 
