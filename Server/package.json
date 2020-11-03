@@ -34,6 +34,7 @@
     "cors": "^2.8.5",
     "csurf": "^1.11.0",
     "express-jwt": "^6.0.0",
+    "fs": "0.0.1-security",
     "jsonwebtoken": "^8.5.1",
     "nodemon": "^2.0.6",
     "passport": "^0.4.1",

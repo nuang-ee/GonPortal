@@ -1,35 +1,47 @@
 /* Helper methods of axios module's HTTP request & responses */
+/* Actual calls to the REST API server is done by the functions in this file */
 
 import axios from "axios";
 import User from "../models/user";
+import { BACKEND_URI } from "../config";
 
-const API_URL = "http://localhost:18081/users/auth";
+const API_URL = `${BACKEND_URI}/recruit/users/auth` ||
+                "http://localhost:18081/recruit/users/auth";
 
 class AuthService {
-  async login(user: User) {
-    const response = await axios.post(`${API_URL}/login`, {
-        username: user.username,
-        password: user.password
-    });
-    if (response.data.accessToken) localStorage.setItem("user", JSON.stringify(response.data));
-    
-    return response.data;
-  }
+    async login(user: User) {
+        const response = await axios.post(
+            `${API_URL}/login`,
+            {
+                username: user.username,
+                password: user.password,
+            },
+            { withCredentials: true }
+        );
 
-  logout() {
-    localStorage.removeItem("user");
-  }
+        return response.data;
+    }
 
-  register(user: User) {
-    return axios.post(`${API_URL}/register`, {
-      uid: user.username,
-      email: user.email,
-      password: user.password,
-      sNum: user.sNum,
-      name: user.name,
-      phoneNum: user.phoneNum
-    });
-  }
+    logout() {
+        document.cookie =
+            "token" + "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        document.cookie =
+            "refreshToken" +
+            "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    }
+
+    async register(user: User) {
+        const response = await axios.post(`${API_URL}/register`, {
+            username: user.username,
+            email: user.email,
+            password: user.password,
+            sNum: user.sNum,
+            name: user.name,
+            phoneNum: user.phoneNum,
+        });
+        console.log(response);
+        return response.data;
+    }
 }
 
 export default new AuthService();

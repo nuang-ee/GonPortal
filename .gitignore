@@ -123,3 +123,6 @@ dist
 
 # Local History for Visual Studio Code
 .history/
+
+# RSA keys.
+**/keys

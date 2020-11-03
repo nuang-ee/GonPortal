@@ -4,8 +4,12 @@ import "./registerServiceWorker";
 import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
+import { ValidationProvider } from 'vee-validate';
+import axios from 'axios';
+import VueCookies from "vue-cookies";
 
-import axios from 'axios'
+Vue.component('ValidationProvider', ValidationProvider);
+Vue.use(VueCookies);
 
 Vue.prototype.$Axios = axios;
 Vue.config.productionTip = false;
