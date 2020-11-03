@@ -14,6 +14,7 @@ export const ChallengeControlRouter = express.Router();
 ChallengeControlRouter.get('/', asyncHandler(async (req, res) => {
     const challenges = await RecruitChallenge
         .find({}, ['_id', 'title', 'category', 'difficulty'])
+        .exec()
         .catch(err => {
             res.status(500).send("Database Error");
             throw err;
@@ -28,6 +29,7 @@ ChallengeControlRouter.get('/:_id', asyncHandler(async (req, res) => {
 
     const challenge = await RecruitChallenge
         .findById(challengeId, ['title', 'category', 'difficulty', 'description'])
+        .exec()
         .catch(err => {
             res.status(500).send("Database Error");
             throw err;
@@ -60,6 +62,7 @@ ChallengeControlRouter.post('/', asyncHandler(async (req, res) => {
             { $setOnInsert: { difficulty: difficulty, description: description, flag: flag } },
             { upsert: true, new: true, rawResult: true }
         )
+        .exec()
         .catch(err => {
             res.status(500).send("Database Error");
             throw err;
@@ -81,6 +84,7 @@ ChallengeControlRouter.put('/:_id', asyncHandler(async (req, res) => {
 
     const challenge = await RecruitChallenge
         .findByIdAndUpdate(challengeId, req.body, { new: true })
+        .exec()
         .catch(err => {
             res.status(500).send("Database Error");
             throw err;
@@ -101,6 +105,7 @@ ChallengeControlRouter.delete('/:_id', asyncHandler(async (req, res) => {
 
     const challenge = await RecruitChallenge
         .findByIdAndDelete(challengeId)
+        .exec()
         .catch(err => {
             res.status(500).send("Database Error");
             throw err;
@@ -121,11 +126,11 @@ ChallengeControlRouter.post('/submit/:_id', asyncHandler(async (req, res) => {
 
     const challenge = await RecruitChallenge
         .findById(challengeId, ['flag'])
+        .exec()
         .catch(err => {
             res.status(500).send("Database Error");
             throw err;
         });
-    console.log(challenge);
 
     if (challenge === null) {
         return res.status(400).send("Challenge Not Exists");
@@ -142,6 +147,7 @@ ChallengeControlRouter.post('/submit/:_id', asyncHandler(async (req, res) => {
             { $addToSet: { solved: challengeId } },
             { new: true }
         )
+        .exec()
         .catch(err => {
             res.status(500).send("Database Error");
             throw err;
