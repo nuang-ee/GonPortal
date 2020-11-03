@@ -17,8 +17,9 @@ export const RecruitChallengeSchema = new mongoose.Schema({
     // category: { type: mongoose.Schema.Types.ObjectId, ref: 'RecruitCategory', required: true },
     difficulty: { type: Number, required: true },
     description: { type: String, required: true },
-    // hint: { type: String },
+    // hint: [{ type: String }],
     flag: { type: String, required: true },
+    // lock: { type: Boolean, required: true },
 }, { collection: 'RecruitChallengeDocument' });
 
-RecruitChallengeSchema.index({ title: 1, category: 1 }, { unique: true });
+// RecruitChallengeSchema.index({ title: 1, category: 1 }, { unique: true });
