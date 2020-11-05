@@ -6,61 +6,106 @@ import { Auth } from "../../Core/Auth";
 import { JWTAuth, IToken } from "../../Core/Recruitment/JWTAuth";
 import * as Mongoose from "mongoose";
 import { IApplicantAccount } from "../../Documents/Recruitment/AccountDocument";
+import {Query} from "mongoose";
 
 export const AccountControlRouter = express.Router();
+
+type ValidatedResult =
+    | { isValid: true }
+    | { isValid: false, code: number, error: string }
+type Validate = (...args: any[]) => ValidatedResult
+
+const hasNonEmptyFields: Validate = (body) => {
+    const { username, password, sNum, email, name, phoneNum } = body;
+    if (!username || !password || !sNum || !name || !email || !phoneNum) {
+        return {
+            isValid: false,
+            code: 400, // BAD_REQUEST
+            error: "Invalid Request"
+        };
+    }
+    return {
+        isValid: true
+    };
+};
+
+const validateEmail: Validate = (email: string, whiteList: string[]) => {
+    const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!emailRegex.test(email)) {
+        return {
+            isValid: false,
+            code: 400, // BAD_REQUEST
+            error: "Invalid Email Form"
+        };
+    }
+    
+    const _email = email.toLowerCase()
+    const emailDomain = _email.split("@")[1]
+    if (!whiteList.includes(emailDomain)) {
+        return {
+            isValid: false,
+            code: 400, // BAD_REQUEST
+            error: "Only KAIST Domain is acceptable"
+        };
+    }
+    
+    return {
+        isValid: true
+    };
+};
+
+const checkAlreadyRegistered = (username: string, sNum: string, email: string) => {
+    const checkList: [string, Query<number>][] = [
+        ["username", ApplicantAccount.countDocuments({ username: username })],
+        ["student number", ApplicantAccount.countDocuments({ sNum: sNum })],
+        ["email", ApplicantAccount.countDocuments({ email: email })],
+    ];
+
+    return checkList.map(async ([fieldName, query]) => {
+        if (await query > 0) {
+            throw new Error(`${fieldName} is already registered`)
+        }
+    });
+};
+
+type AccountControllerResponse = {
+    success: boolean,
+    message: string,
+}
 
 /* NEW ACCOUNT */
 AccountControlRouter.post(
     "/auth/register",
     asyncHandler(async (req, res) => {
-        const response = {
+        const response: AccountControllerResponse = {
             success: false,
             message: "",
         };
-
-        const { username, password, sNum, name, phoneNum } = req.body;
-        let email = req.body.email;
-        if (!username || !password || !sNum || !name || !email || !phoneNum) {
-            response.message = "invalid request";
-            return res.status(400).json(response);
-        }
-
-        const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        if (!emailRegex.test(email)) {
-            response.message = "invalid email form";
-            return res.status(400).json(response);
+        
+        const { username, password, sNum, name, email, phoneNum } = req.body;
+        const validatedRequest = hasNonEmptyFields(req.body)
+        if (!validatedRequest.isValid) {
+            response.message = validatedRequest.error
+            return res.status(validatedRequest.code).json(response);
         }
 
         /* Only email domain is case insensitive per RFC 5321.
          * However many email service providers (including mail.kaist.ac.kr) also consider
          * user name as case insensitive - we follow this rule. */
-        email = email.toLowerCase();
-
-        const whiteList: string[] = ["kaist.ac.kr"];
-        const emailDomain = email.split("@")[1];
-        if (!whiteList.includes(emailDomain)) {
-            response.message = "sorry, we only allow KAIST students.";
-            return res.status(200).json(response);
+        const whiteList = ["kaist.ac.kr"];
+        const validatedEmail = validateEmail(email, whiteList)
+        if (!validatedEmail.isValid) {
+            response.message = validatedEmail.error;
+            return res.status(validatedEmail.code).json(response);
         }
-
-        // FIXME : edit response to show some toast popup or something, instead of raw text.
-        if ((await ApplicantAccount.countDocuments({ username: username })) > 0) {
-            response.message = "username already exists";
-            return res.status(200).json(response);
+        
+        try {
+            await Promise.all(checkAlreadyRegistered(username, sNum, email))
+        } catch (err) {
+            response.message = err.message
+            return res.status(200).json(response)
         }
-
-        if ((await ApplicantAccount.countDocuments({ sNum: sNum })) > 0) {
-            response.message = "student already registered";
-            return res.status(200).json(response);
-        }
-
-        if ((await ApplicantAccount.countDocuments({ email: email })) > 0) {
-            response.message = "email already registered";
-            return res.status(200).json(response);
-        }
-
         const pwHash = await Auth.hash(req.body.password);
-
         const account = await ApplicantAccount.create({
             role: 'applicant',
             username: username,
@@ -76,12 +121,14 @@ AccountControlRouter.post(
         });
 
         sendAuthMail(account._id, email, (err, info) => {
-            if (err) console.log(err, info);
+            if (err) {
+                console.log(err, info);
+            }
         });
 
         response.success = true;
         response.message = "successfully joined your account";
-        return res.status(200).json(response);
+        return res.status(200).json();
     })
 );
 
