@@ -51,7 +51,7 @@
     "typescript": "~4.0.3",
     "vee-validate": "^3.4.3",
     "vue-cli-plugin-vuetify": "~2.0.7",
-    "vue-cookies": "^1.7.4",
+    "vue-cookies-ts": "^1.5.19",
     "vue-template-compiler": "^2.6.12",
     "vuetify-loader": "^1.6.0"
   },
