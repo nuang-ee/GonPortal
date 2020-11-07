@@ -29,7 +29,7 @@ import LoginForm from "./components/LoginForm.vue"
   },
   data: () => ({
     //
-  })
+  }),
 })
 export default class App extends Vue {};
 </script>

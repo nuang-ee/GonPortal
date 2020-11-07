@@ -2,14 +2,17 @@
 
 import AuthService from "../services/AuthService";
 import { Module } from "vuex";
-import { register } from "register-service-worker";
 import axios from 'axios';
+import Vue from 'vue';
+import jwt from 'jsonwebtoken';
 
-const userGetResult = localStorage.getItem("user");
-const user = userGetResult ? JSON.parse(userGetResult) : null;
+console.log(window.$cookies);
+const token = Vue.$cookies.get("token") as string;
+const user = token ? jwt.decode(token) : null;
+console.log(token);
 
 const initialState = user
-    ? { status: { loggedIn: true }, user }
+    ? { status: { loggedIn: true }, user: user }
     : { status: { loggedIn: false }, user: null };
 
 export const auth: Module<any, any> = {
@@ -19,6 +22,13 @@ export const auth: Module<any, any> = {
         async login({ commit }, user) {
             const loginResult = await AuthService.login(user);
             if (loginResult) {
+                const token = Vue.$cookies.get("token") as string;
+                if (!token) {
+                    commit("LOGINFAILRE");
+                    return loginResult;
+                }
+                const user = jwt.decode(token);
+                console.log(user);
                 commit("LOGINSUCCESS", user);
                 return user;
             } else {
