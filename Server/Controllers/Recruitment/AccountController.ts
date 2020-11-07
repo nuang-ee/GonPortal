@@ -10,12 +10,14 @@ import {Query} from "mongoose";
 
 export const AccountControlRouter = express.Router();
 
+type ValidationSuccess = { isValid: true }
+type ValidationFailure = { isValid: false, code: number, error: string }
 type ValidatedResult =
-    | { isValid: true }
-    | { isValid: false, code: number, error: string }
+    | ValidationSuccess
+    | ValidationFailure
 type Validate = (...args: any[]) => ValidatedResult
 
-const hasNonEmptyFields: Validate = (body) => {
+const validateNonEmptyFields: Validate = (body) => {
     const { username, password, sNum, email, name, phoneNum } = body;
     if (!username || !password || !sNum || !name || !email || !phoneNum) {
         return {
@@ -54,18 +56,27 @@ const validateEmail: Validate = (email: string, whiteList: string[]) => {
     };
 };
 
-const checkAlreadyRegistered = (username: string, sNum: string, email: string) => {
+const validateAlreadyRegisteredDocs = async (username: string, sNum: string, email: string): Promise<ValidatedResult[]> => {
     const checkList: [string, Query<number>][] = [
-        ["username", ApplicantAccount.countDocuments({ username: username })],
-        ["student number", ApplicantAccount.countDocuments({ sNum: sNum })],
-        ["email", ApplicantAccount.countDocuments({ email: email })],
+        ["username", ApplicantAccount.countDocuments({ username })],
+        ["student number", ApplicantAccount.countDocuments({ sNum })],
+        ["email", ApplicantAccount.countDocuments({ email })],
     ];
-
-    return checkList.map(async ([fieldName, query]) => {
-        if (await query > 0) {
-            throw new Error(`${fieldName} is already registered`)
+    
+    const checkActions: Promise<ValidatedResult>[] = checkList.map(async checkItem => {
+        const [fieldName, query] = checkItem;
+        const isDuplicated = (await query) > 0
+        if (isDuplicated) {
+            return {
+                isValid: false,
+                code: 409, // CONFLICT : has a conflict to the current state of the server
+                error: `${fieldName} is already registered`
+            };
         }
+        return { isValid: true } as ValidationSuccess;
     });
+    
+    return Promise.all(checkActions)
 };
 
 type AccountControllerResponse = {
@@ -83,28 +94,31 @@ AccountControlRouter.post(
         };
         
         const { username, password, sNum, name, email, phoneNum } = req.body;
-        const validatedRequest = hasNonEmptyFields(req.body)
-        if (!validatedRequest.isValid) {
-            response.message = validatedRequest.error
-            return res.status(validatedRequest.code).json(response);
+        const nonEmptyFieldsValidatedResult = validateNonEmptyFields(req.body)
+        if (!nonEmptyFieldsValidatedResult.isValid) {
+            response.message = nonEmptyFieldsValidatedResult.error
+            return res.status(nonEmptyFieldsValidatedResult.code).json(response);
         }
 
         /* Only email domain is case insensitive per RFC 5321.
          * However many email service providers (including mail.kaist.ac.kr) also consider
          * user name as case insensitive - we follow this rule. */
         const whiteList = ["kaist.ac.kr"];
-        const validatedEmail = validateEmail(email, whiteList)
-        if (!validatedEmail.isValid) {
-            response.message = validatedEmail.error;
-            return res.status(validatedEmail.code).json(response);
+        const emailValidatedResult = validateEmail(email, whiteList)
+        if (!emailValidatedResult.isValid) {
+            response.message = emailValidatedResult.error;
+            return res.status(emailValidatedResult.code).json(response);
         }
         
-        try {
-            await Promise.all(checkAlreadyRegistered(username, sNum, email))
-        } catch (err) {
-            response.message = err.message
-            return res.status(200).json(response)
+        const alreadyRegisteredDocsValidatedResult = await validateAlreadyRegisteredDocs(username, sNum, email)
+        const duplicatedDocsValidatedResult = alreadyRegisteredDocsValidatedResult.filter(result => !result.isValid) as ValidationFailure[]
+        if (duplicatedDocsValidatedResult.length > 0) {
+            duplicatedDocsValidatedResult.forEach(failure => {
+                response.message += failure.error
+            });
+            return res.status(duplicatedDocsValidatedResult[0].code).json(response);
         }
+        
         const pwHash = await Auth.hash(req.body.password);
         const account = await ApplicantAccount.create({
             role: 'applicant',
@@ -128,7 +142,7 @@ AccountControlRouter.post(
 
         response.success = true;
         response.message = "successfully joined your account";
-        return res.status(200).json();
+        return res.status(200).json(response);
     })
 );
 
