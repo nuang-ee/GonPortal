@@ -4,9 +4,11 @@
 import axios from "axios";
 import User from "../models/user";
 import { BACKEND_URI } from "../config";
+import Cookies from "js-cookie";
 
-const API_URL = `${BACKEND_URI}/recruit/users/auth` ||
-                "http://localhost:18081/recruit/users/auth";
+const API_URL =
+    `${BACKEND_URI}/recruit/users/auth` ||
+    "http://localhost:18081/recruit/users/auth";
 
 class AuthService {
     async login(user: User) {
@@ -23,11 +25,7 @@ class AuthService {
     }
 
     logout() {
-        document.cookie =
-            "token" + "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-        document.cookie =
-            "refreshToken" +
-            "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        // request invalidation of cookie to server side.
     }
 
     async register(user: User) {
@@ -39,7 +37,6 @@ class AuthService {
             name: user.name,
             phoneNum: user.phoneNum,
         });
-        console.log(response);
         return response.data;
     }
 }

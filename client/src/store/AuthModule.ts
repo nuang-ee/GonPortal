@@ -1,47 +1,43 @@
 /* Actual calls to the REST API server is done by the functions in this file */
 
 import AuthService from "../services/AuthService";
-import { Module } from "vuex";
-import axios from 'axios';
-import Vue from 'vue';
-import jwt from 'jsonwebtoken';
+import { Module, Commit } from "vuex";
+import Cookies from "js-cookie";
+import User from "../models/user";
 
-console.log(window.$cookies);
-const token = Vue.$cookies.get("token") as string;
-const user = token ? jwt.decode(token) : null;
-console.log(token);
+type userInfo = { username?: string; role?: string };
 
-const initialState = user
-    ? { status: { loggedIn: true }, user: user }
-    : { status: { loggedIn: false }, user: null };
+const username = localStorage.getItem("username");
+const role = localStorage.getItem("role");
+const initialState =
+    username && role
+        ? {
+              status: { loggedIn: true },
+              user: { username: username, role: role },
+          }
+        : { status: { loggedIn: false }, user: { username: null, role: null } };
 
 export const auth: Module<any, any> = {
     namespaced: true,
     state: initialState,
     actions: {
-        async login({ commit }, user) {
-            const loginResult = await AuthService.login(user);
-            if (loginResult) {
-                const token = Vue.$cookies.get("token") as string;
-                if (!token) {
-                    commit("LOGINFAILRE");
-                    return loginResult;
-                }
-                const user = jwt.decode(token);
-                console.log(user);
-                commit("LOGINSUCCESS", user);
-                return user;
-            } else {
+        async login({ commit }, user: User): Promise<userInfo> {
+            try {
+                const data = await AuthService.login(user);
+                const userInfo = data.userInfo as userInfo;
+                commit("LOGINSUCCESS", userInfo);
+                return userInfo;
+            } catch (e) {
                 commit("LOGINFAILURE");
-                return loginResult;
+                throw e;
             }
         },
-        logout({ commit }) {
+        logout({ commit }): void {
             AuthService.logout();
-            commit("logout");
+            commit("LOGOUT");
         },
-        async register({ commit }, user) {
-            const {result, message} = await AuthService.register(user);
+        async register({ commit }, user: User) {
+            const { result, message } = await AuthService.register(user);
             if (!result) {
                 commit("REGISTERSUCCESS");
                 return message;
@@ -52,13 +48,16 @@ export const auth: Module<any, any> = {
         },
     },
     mutations: {
-        LOGINSUCCESS(state, user) {
+        LOGINSUCCESS(state, user: userInfo) {
             state.status.loggedIn = true;
             state.user = user;
+            localStorage.setItem("username", user.username as string);
+            localStorage.setItem("role", user.role as string);
         },
         LOGINFAILURE(state) {
             state.status.loggedIn = false;
             state.user = null;
+            localStorage.clear();
         },
         LOGOUT(state) {
             state.status.loggedIn = false;
