@@ -188,7 +188,6 @@ AccountControlRouter.get(
 /* MAIL AUTHENTICATION */
 AccountControlRouter.get(
     "/auth/mail/verify",
-    asyncHandler(JWTAuth.authenticate),
     asyncHandler(async (req, res) => {
         const { iv, authCode, authTag } = req.query;
 
