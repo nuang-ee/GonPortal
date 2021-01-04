@@ -6,16 +6,14 @@ import { Auth } from "../../Core/Auth";
 import { JWTAuth, IToken } from "../../Core/Recruitment/JWTAuth";
 import * as Mongoose from "mongoose";
 import { IApplicantAccount } from "../../Documents/Recruitment/AccountDocument";
-import {Query} from "mongoose";
+import { Query } from "mongoose";
 
 export const AccountControlRouter = express.Router();
 
-type ValidationSuccess = { isValid: true }
-type ValidationFailure = { isValid: false, code: number, error: string }
-type ValidatedResult =
-    | ValidationSuccess
-    | ValidationFailure
-type Validate = (...args: any[]) => ValidatedResult
+type ValidationSuccess = { isValid: true };
+type ValidationFailure = { isValid: false; code: number; error: string };
+type ValidatedResult = ValidationSuccess | ValidationFailure;
+type Validate = (...args: any[]) => ValidatedResult;
 
 const validateNonEmptyFields: Validate = (body) => {
     const { username, password, sNum, email, name, phoneNum } = body;
@@ -23,11 +21,11 @@ const validateNonEmptyFields: Validate = (body) => {
         return {
             isValid: false,
             code: 400, // BAD_REQUEST
-            error: "Invalid Request"
+            error: "Invalid Request",
         };
     }
     return {
-        isValid: true
+        isValid: true,
     };
 };
 
@@ -37,52 +35,58 @@ const validateEmail: Validate = (email: string, whiteList: string[]) => {
         return {
             isValid: false,
             code: 400, // BAD_REQUEST
-            error: "Invalid Email Form"
+            error: "Invalid Email Form",
         };
     }
-    
-    const _email = email.toLowerCase()
-    const emailDomain = _email.split("@")[1]
+
+    const _email = email.toLowerCase();
+    const emailDomain = _email.split("@")[1];
     if (!whiteList.includes(emailDomain)) {
         return {
             isValid: false,
             code: 400, // BAD_REQUEST
-            error: "Only KAIST Domain is acceptable"
+            error: "Only KAIST Domain is acceptable",
         };
     }
-    
+
     return {
-        isValid: true
+        isValid: true,
     };
 };
 
-const validateAlreadyRegisteredDocs = async (username: string, sNum: string, email: string): Promise<ValidatedResult[]> => {
+const validateAlreadyRegisteredDocs = async (
+    username: string,
+    sNum: string,
+    email: string
+): Promise<ValidatedResult[]> => {
     const checkList: [string, Query<number>][] = [
         ["username", ApplicantAccount.countDocuments({ username })],
         ["student number", ApplicantAccount.countDocuments({ sNum })],
         ["email", ApplicantAccount.countDocuments({ email })],
     ];
-    
-    const checkActions: Promise<ValidatedResult>[] = checkList.map(async checkItem => {
-        const [fieldName, query] = checkItem;
-        const isDuplicated = (await query) > 0
-        if (isDuplicated) {
-            return {
-                isValid: false,
-                code: 409, // CONFLICT : has a conflict to the current state of the server
-                error: `${fieldName} is already registered`
-            };
+
+    const checkActions: Promise<ValidatedResult>[] = checkList.map(
+        async (checkItem) => {
+            const [fieldName, query] = checkItem;
+            const isDuplicated = (await query) > 0;
+            if (isDuplicated) {
+                return {
+                    isValid: false,
+                    code: 409, // CONFLICT : has a conflict to the current state of the server
+                    error: `${fieldName} is already registered`,
+                };
+            }
+            return { isValid: true } as ValidationSuccess;
         }
-        return { isValid: true } as ValidationSuccess;
-    });
-    
-    return Promise.all(checkActions)
+    );
+
+    return Promise.all(checkActions);
 };
 
 type AccountControllerResponse = {
-    success: boolean,
-    message: string,
-}
+    success: boolean;
+    message: string;
+};
 
 /* NEW ACCOUNT */
 AccountControlRouter.post(
@@ -92,36 +96,46 @@ AccountControlRouter.post(
             success: false,
             message: "",
         };
-        
+
         const { username, password, sNum, name, email, phoneNum } = req.body;
-        const nonEmptyFieldsValidatedResult = validateNonEmptyFields(req.body)
+        const nonEmptyFieldsValidatedResult = validateNonEmptyFields(req.body);
         if (!nonEmptyFieldsValidatedResult.isValid) {
-            response.message = nonEmptyFieldsValidatedResult.error
-            return res.status(nonEmptyFieldsValidatedResult.code).json(response);
+            response.message = nonEmptyFieldsValidatedResult.error;
+            return res
+                .status(nonEmptyFieldsValidatedResult.code)
+                .json(response);
         }
 
         /* Only email domain is case insensitive per RFC 5321.
          * However many email service providers (including mail.kaist.ac.kr) also consider
          * user name as case insensitive - we follow this rule. */
         const whiteList = ["kaist.ac.kr"];
-        const emailValidatedResult = validateEmail(email, whiteList)
+        const emailValidatedResult = validateEmail(email, whiteList);
         if (!emailValidatedResult.isValid) {
             response.message = emailValidatedResult.error;
             return res.status(emailValidatedResult.code).json(response);
         }
-        
-        const alreadyRegisteredDocsValidatedResult = await validateAlreadyRegisteredDocs(username, sNum, email)
-        const duplicatedDocsValidatedResult = alreadyRegisteredDocsValidatedResult.filter(result => !result.isValid) as ValidationFailure[]
+
+        const alreadyRegisteredDocsValidatedResult = await validateAlreadyRegisteredDocs(
+            username,
+            sNum,
+            email
+        );
+        const duplicatedDocsValidatedResult = alreadyRegisteredDocsValidatedResult.filter(
+            (result) => !result.isValid
+        ) as ValidationFailure[];
         if (duplicatedDocsValidatedResult.length > 0) {
-            duplicatedDocsValidatedResult.forEach(failure => {
-                response.message += failure.error
+            duplicatedDocsValidatedResult.forEach((failure) => {
+                response.message += failure.error;
             });
-            return res.status(duplicatedDocsValidatedResult[0].code).json(response);
+            return res
+                .status(duplicatedDocsValidatedResult[0].code)
+                .json(response);
         }
-        
+
         const pwHash = await Auth.hash(req.body.password);
         const account = await ApplicantAccount.create({
-            role: 'applicant',
+            role: "applicant",
             username: username,
             password: pwHash,
             name: name,
@@ -291,6 +305,10 @@ AccountControlRouter.post(
         const response = {
             success: false,
             message: "",
+            userInfo: {
+                username: "",
+                role: "",
+            },
         };
 
         const { username, password } = req.body;
@@ -314,6 +332,8 @@ AccountControlRouter.post(
 
         response.success = true;
         response.message = "succesfully logged in";
+        response.userInfo.username = user.username;
+        response.userInfo.role = user.role;
         return res.status(200).json(response);
     })
 );
