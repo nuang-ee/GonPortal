@@ -1,6 +1,8 @@
-import mongoose, {ConnectionOptions} from "mongoose";
-import { IApplicantAccount, ApplicantAccountSchema } from "../Documents/Recruitment/AccountDocument";
-import { IRefreshToken, RefreshTokenSchema } from "../Documents/Recruitment/RefreshTokenDocument";
+import mongoose from "mongoose";
+import { INewbieAccount, NewbieAccountSchema } from "../Documents/Recruitment/AccountDocument";
+import { INewbieRefreshToken, NewbieRefreshTokenSchema } from "../Documents/Recruitment/RefreshTokenDocument";
+import { IRecruitCategory, RecruitCategorySchema } from "../Documents/Recruitment/CategoryDocument";
+import { IRecruitChallenge, RecruitChallengeSchema } from "../Documents/Recruitment/ChallengeDocument";
 
 const mongodbURI: string = process.env.MONGO_URI || 'mongodb://localhost:27017/portal_newbie_dev';
 const mongodbOption: ConnectionOptions = {
@@ -19,5 +21,7 @@ mongoose.connect(mongodbURI, mongodbOption)
         process.exit(1);
 });
 
-export const ApplicantAccount = mongoose.model<IApplicantAccount>("ApplicantAccount", ApplicantAccountSchema);
-export const RecruitRefreshToken = mongoose.model<IRefreshToken>("RecruitRefreshToken", RefreshTokenSchema);
+export const NewbieAccount = mongoose.model<INewbieAccount>("NewbieAccount", NewbieAccountSchema);
+export const NewbieRefreshToken = mongoose.model<INewbieRefreshToken>("NewbieRefreshToken", NewbieRefreshTokenSchema);
+export const RecruitCategory = mongoose.model<IRecruitCategory>("RecruitCategory", RecruitCategorySchema);
+export const RecruitChallenge = mongoose.model<IRecruitChallenge>("RecruitChallenge", RecruitChallengeSchema);
