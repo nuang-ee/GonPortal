@@ -1,4 +1,5 @@
 import * as mongoose from "mongoose";
+import { IRecruitChallenge } from "./ChallengeDocument";
 
 export interface IApplicantAccount extends mongoose.Document {
     role: string;
@@ -11,7 +12,8 @@ export interface IApplicantAccount extends mongoose.Document {
     emailAuthed: boolean;   // true if email is authorized via mailauth.
     created: Date;
     resume: string;
-    solved: number;
+    solved: Array<IRecruitChallenge['_id']>;
+    created: Date;
 }
 
 export const ApplicantAccountSchema = new mongoose.Schema({
@@ -25,5 +27,6 @@ export const ApplicantAccountSchema = new mongoose.Schema({
     emailAuthed: { type: Boolean },
     created: { type: Date },
     resume: { type: String },
-    solved: { type: Number },
-}, { collection: 'ApplicantAccountDocument' });
+    solved: [{ type: mongoose.Schema.Types.ObjectId, ref: 'RecruitChallenge', required: true }],
+    created: { type: Date },
+}, { collection: 'NewbieAccountDocument' });
